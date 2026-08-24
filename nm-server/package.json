@@ -5,8 +5,9 @@
   "description": "",
   "main": "server.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "start": "npx tsx server.ts",
+  "build": "echo 'Brak wymaganej kompilacji budowania'"
+}
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
