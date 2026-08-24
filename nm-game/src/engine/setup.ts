@@ -1,7 +1,7 @@
 // src/engine/setup.ts
 
 import type { GameState, Position, UnitType } from './types';
-import { getTile } from './board';
+//import { getTile } from './board';
 
 export const INITIAL_INVENTORY: Record<UnitType, number> = {
   pancernik: 3,
