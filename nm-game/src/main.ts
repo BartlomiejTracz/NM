@@ -13,7 +13,11 @@ import { createInitialBoard, isExitTile } from './engine/board';
 // 0. SOCKET.IO – POŁĄCZENIE Z SERWEREM
 // ==========================================
 import { io } from 'socket.io-client';
-const socket = io('http://localhost:3000');
+const serverUrl = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://manewry-morskie-serwer.onrender.com/'; // wstaw tutaj swój adres z Render
+
+const socket = io(serverUrl);
 (window as any).socket = socket;
 
 // ==========================================
