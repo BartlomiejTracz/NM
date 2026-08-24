@@ -1,5 +1,3 @@
-// src/render/inputHandler.ts
-
 import { store } from '../store/store';
 import type { Position } from '../engine/types';
 import { TILE_SIZE } from './boardRenderer';
@@ -21,6 +19,7 @@ export class InputHandler {
     this.canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
     this.canvas.addEventListener('mouseleave', this.onMouseLeave.bind(this)); 
+    this.canvas.addEventListener('contextmenu', this.onContextMenu.bind(this)); // Dodano PPM
   }
 
   private getMousePos(event: MouseEvent) {
@@ -29,11 +28,40 @@ export class InputHandler {
     return { x: (event.clientX - rect.left) * scaleX, y: (event.clientY - rect.top) * scaleY };
   }
 
+  // Obsługa prawego przycisku myszy (Usuwanie do magazynu)
+  private onContextMenu(event: MouseEvent) {
+    event.preventDefault(); 
+    const state = store.getState();
+    if (state.phase !== 'setup') return;
+
+    const localPlayer = (window as any).myNetworkRole || state.activePlayerId;
+
+    if (this.draggedUnitId) {
+      const newUnits = state.units.filter(u => u.id !== this.draggedUnitId);
+      this.draggedUnitId = null; 
+      store.setState({ ...state, units: newUnits });
+      return; 
+    }
+
+    const { x, y } = this.getMousePos(event);
+    const col = Math.floor(x / TILE_SIZE); 
+    const row = Math.floor(y / TILE_SIZE);
+
+    const clickedUnit = state.units.find(u => u.position.col === col && u.position.row === row && u.ownerId === localPlayer);
+    
+    if (clickedUnit) {
+      const newUnits = state.units.filter(u => u.id !== clickedUnit.id);
+      store.setState({ ...state, units: newUnits });
+    }
+  }
+
   private onMouseLeave(_event: MouseEvent) {
     if (this.draggedUnitId) { this.draggedUnitId = null; store.setState(store.getState()); }
   }
 
   private onMouseDown(event: MouseEvent) {
+    if (event.button !== 0) return; // Tylko Lewy Przycisk Myszy
+
     const state = store.getState();
     const { x, y } = this.getMousePos(event);
     const col = Math.floor(x / TILE_SIZE); const row = Math.floor(y / TILE_SIZE);
@@ -53,6 +81,8 @@ export class InputHandler {
   }
 
   private onMouseUp(event: MouseEvent) {
+    if (event.button !== 0) return; // Ignoruj jeśli to nie LPM
+
     const state = store.getState();
     const { x, y } = this.getMousePos(event);
     const col = Math.floor(x / TILE_SIZE); const row = Math.floor(y / TILE_SIZE);
@@ -60,8 +90,27 @@ export class InputHandler {
     const localPlayer = (window as any).myNetworkRole || state.activePlayerId;
 
     if (state.phase === 'setup' && this.draggedUnitId) {
-      const unit = state.units.find(u => u.id === this.draggedUnitId);
-      if (unit && isValidPlacement(state, unit.type, targetPos, localPlayer)) { unit.position = targetPos; }
+      const draggedUnit = state.units.find(u => u.id === this.draggedUnitId);
+      
+      if (draggedUnit) {
+        const targetUnit = state.units.find(u => u.position.col === targetPos.col && u.position.row === targetPos.row && u.id !== draggedUnit.id);
+
+        // MECHANIKA ZAMIANY
+        if (targetUnit && targetUnit.ownerId === localPlayer) {
+          const originalPos = { ...draggedUnit.position };
+          
+          // Zdejmujemy ograniczenia ze ścian - skoro oba okręty są już poprawnie 
+          // umieszczone w porcie, po prostu zamieniają się miejscami!
+          draggedUnit.position = targetPos;
+          targetUnit.position = originalPos;
+          
+        } else {
+          // ZWYKŁE POSTAWIENIE
+          if (isValidPlacement(state, draggedUnit.type, targetPos, localPlayer, draggedUnit.id)) { 
+            draggedUnit.position = targetPos; 
+          }
+        }
+      }
       this.draggedUnitId = null; store.setState(state); return;
     }
     
@@ -83,7 +132,6 @@ export class InputHandler {
         let action: any = null;
         const dist = Math.max(Math.abs(selectedUnit.position.row - targetPos.row), Math.abs(selectedUnit.position.col - targetPos.col));
 
-        // POBIERAMY TYP KAFELKA DLA ATAKUJĄCEGO I CELU
         const attackerTile = state.board.tiles[selectedUnit.position.row][selectedUnit.position.col];
         const targetTile = state.board.tiles[targetPos.row][targetPos.col];
 
@@ -99,7 +147,6 @@ export class InputHandler {
           else action = { kind: 'clear_mine', unitId: this.selectedUnitId, at: targetPos };
         }
         else if (this.actionMode === 'default' && clickedUnit && clickedUnit.ownerId !== localPlayer) {
-          // BLOKADA ATAKU W STREFIE NEUTRALNEJ
           if (attackerTile === 'neutral' || targetTile === 'neutral') {
             alert('ZŁAMANIE ZASAD: Walka w strefie neutralnej jest surowo zabroniona!');
           } else if (dist <= UNIT_RULES[selectedUnit.type].range) {

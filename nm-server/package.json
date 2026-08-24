@@ -2,6 +2,7 @@
   "name": "nm-server",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "server.ts",
   "scripts": {
     "start": "npx tsx server.ts",
@@ -16,4 +17,5 @@
     "tsx": "^4.7.1",
     "typescript": "^5.4.2"
   }
+  
 }
