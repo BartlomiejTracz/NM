@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manewry Morskie - System Radarowy</title>
+  <link id="theme-style" rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+  <!-- MENU STARTOWE -->
+  <div id="screen-menu" class="screen active">
+  <div class="menu-container">
+    <h1>MANEWRY MORSKIE</h1>
+    <h2 style="color: #62d83b; margin-bottom: 20px;">SYSTEM RADAROWY M-1384</h2>
+    
+    <!-- Nowy panel multiplayer -->
+    <div style="border: 1px solid #39B52A; padding: 20px; margin-bottom: 20px;">
+      <button id="btn-create-room" class="btn" style="width: 100%; margin-bottom: 10px;">UTWÓRZ NOWĄ GRĘ (HOST)</button>
+      
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <input type="text" id="input-room-code" placeholder="KOD POKOJU" class="retro-input" style="flex: 1; background: #050705; color: #62d83b; border: 1px solid #39B52A; padding: 5px; text-transform: uppercase;" />
+        <button id="btn-join-room" class="btn" style="width: 50%;">DOŁĄCZ</button>
+      </div>
+    </div>
+
+    <!-- Ukryty tekst, który pokaże wygenerowany kod -->
+    <p id="room-code-display" style="color: #fbbf24; font-weight: bold; font-size: 1.2rem; display: none; text-align: center;"></p>
+  </div>
+</div>
+
+  <!-- SETUP -->
+  <div id="screen-setup" class="screen">
+    <h2 style="color: var(--text-active);">DOKI ROZSTAWIENIA</h2>
+    <div style="display: flex; gap: 20px; width: 100%; justify-content: center; max-height: 80vh;">
+      <div id="inventory-list" class="panel" style="width: 300px; overflow-y: auto;"></div>
+      <div class="monitor-bezel" style="width: auto; height: auto;">
+        <div class="crt-screen"><canvas id="setup-canvas"></canvas></div>
+      </div>
+    </div>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <button id="btn-save-setup">ZAPISZ FLOTĘ</button>
+      <button id="btn-reset-setup">RESETUJ</button>
+      <button id="btn-back-to-menu">POWRÓT</button>
+      <!-- NOWE: Eksport i Import -->
+      <button id="btn-download-setup" class="btn" style="color: #fbbf24; border-color: #fbbf24;">POBIERZ PLIK</button>
+      <button id="btn-load-setup" class="btn" style="color: #60a5fa; border-color: #60a5fa;">WCZYTAJ PLIK</button>
+  
+  <!-- Ukryty input do obsługi wyboru pliku z dysku -->
+      <input type="file" id="input-load-setup" accept=".json" style="display: none;" />
+    </div>
+  </div>
+
+  <!-- EKRAN GRY -->
+  <div id="screen-game" class="screen">
+    <div class="header-area">
+      <div class="header-logo">
+        <div class="logo-icon">❖</div>
+        <div class="header-titles">
+          <h1>MANEWRY MORSKIE</h1>
+          <h3>SYSTEM RADAROWY M-1384</h3>
+        </div>
+      </div>
+      <div class="header-tabs">
+        <button class="tab active">MAPA</button>
+        <button class="tab" id="btn-toggle-rules">NOTATNIK</button>
+        <button class="tab" id="btn-game-to-menu" style="color: #a83232; border-color: #a83232;">ZAMKNIJ SYSTEM</button>
+      </div>
+    </div>
+
+    <!-- LEWY PANEL -->
+    <div class="panel left-panel">
+      <h3>KONTROLA</h3>
+      
+      <div class="control-group">
+        <div class="control-label">ZASIĘG (ZOOM)</div>
+        <div class="control-box">
+          <span id="zoom-val">20</span>
+          <div style="display: flex; flex-direction: column; font-size: 0.6rem; cursor: pointer;">
+            <span id="btn-zoom-in" style="padding: 2px;">▲</span>
+            <span id="btn-zoom-out" style="padding: 2px;">▼</span>
+          </div>
+        </div>
+      </div>
+
+      <button id="btn-reset-view" class="btn" style="margin-top: 10px; width: 100%;">ZRESETUJ WIDOK</button>
+
+      <!-- PRZEŁĄCZNIK STYLÓW -->
+      <div class="control-group">
+        <div class="control-label">TRYB</div>
+        <div class="control-box" style="padding: 0 5px;">
+          <select id="mode-selector" style="background: transparent; color: var(--text-glow); border: none; font-family: 'VT323', monospace; font-size: 1.3rem; width: 100%; cursor: pointer; outline: none; padding: 8px 0;">
+            <option value="style.css" style="background: #000; color: #39ff14;">RADAR (ZIELONY)</option>
+            <option value="style2.css" style="background: #000; color: #fff;">SONAR (SZARY)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <div class="control-label">SYGNAŁ</div>
+        <div class="control-box bargraph">
+          <div class="bar" style="height: 20%;"></div>
+          <div class="bar" style="height: 40%;"></div>
+          <div class="bar" style="height: 60%;"></div>
+          <div class="bar" style="height: 90%;"></div>
+          <div class="bar" style="height: 100%;"></div>
+        </div>
+      </div>
+
+      <div id="special-actions" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px; border-top: 1px dashed var(--border-dim); padding-top: 15px;">
+        <div class="control-label" style="color: var(--text-active);">MODUŁ TRAŁOWCA</div>
+        <button id="btn-lay-mine">POSTAW MINĘ</button>
+        <button id="btn-clear-mine">ROZBROJ MINĘ</button>
+        <div id="mine-count" class="info-val">Miny: 6/6</div>
+      </div>
+
+      <div class="control-group" style="margin-top: 15px; border-top: 1px dashed var(--border-dim); padding-top: 15px;">
+        <div class="control-label">STRATY WROGA (RĘCZNE)</div>
+        <div id="manual-tracker" style="display: flex; flex-direction: column; gap: 8px; font-size: 1rem; color: var(--text-normal); margin-top: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- ŚRODKOWY MONITOR -->
+    <div class="center-monitor">
+      <div class="monitor-bezel">
+        <div class="crt-screen" id="crt-container">
+          <div class="radar-overlay-text radar-top-left">MANEWRY MORSKIE</div>
+          <div class="radar-overlay-text radar-top-right">PORT</div>
+          <div class="radar-overlay-text radar-bottom-left">PORT</div>
+          <div class="radar-overlay-text radar-bottom-right">ZASIĘG <span id="radar-range-text">20</span></div>
+          
+          <!-- ZMIANA: Wrapper do przesuwania świata -->
+          <div id="world-layer" style="position: relative; transform-origin: center; transition: none; display: inline-block;">
+            <canvas id="game-canvas" style="display: block;"></canvas> 
+            <img src="./sprites/gorilla.jpg" style="position: absolute; left: 150%; top: -5%; width: 400px; border: 2px solid #62d83b; opacity: 0.7; pointer-events: none;" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRAWY PANEL -->
+    <div class="panel right-panel">
+      <h3>LEGENDA</h3>
+      <div class="legend-item"><div class="legend-icon" style="background: var(--radar-sea);"></div> WODA</div>
+      <div class="legend-item"><div class="legend-icon" style="background: #176d1a;"></div> WYSPA</div>
+      <div class="legend-item"><div class="legend-icon" style="border-color: var(--text-active);">·</div> OBSZAR GRY</div>
+      <div class="legend-item"><div class="legend-icon" style="border-top: 1px solid #075518; height:0;"></div> SIATKA</div>
+      <div class="legend-item"><div class="legend-icon" style="border:none; color:var(--text-glow);">+</div> KURSOR</div>
+
+      <h3 style="margin-top: 20px;">INFORMACJE</h3>
+      <div class="info-row">SEKTOR: <span id="ui-sector" class="info-val">C-7</span></div>
+      <div class="info-row">POZYCJA: <span id="ui-coords" class="info-val">15, 8</span></div>
+      <div class="info-row">GŁĘBOKOŚĆ: <span class="info-val">--</span></div>
+      <div class="info-row">POGODA: <span class="info-val">POGODNIE</span></div>
+      <div class="info-row">WIATR: <span class="info-val">12 W</span></div>
+      <div class="info-row" style="margin-top: 15px; color: var(--text-active);">TURA: <span id="turn-indicator" style="color: #fff;">Runda 1 | Tura gracza: A</span></div>
+      
+      <div id="dispatch-console"></div>
+    </div>
+
+    <div class="footer-area">
+      <div class="status-indicator"><div class="status-dot"></div> SYSTEM AKTYWNY</div>
+      <div>MORSKI SYSTEM RADAROWY TYP MR-1384</div>
+      <div id="clock">00:00:00</div>
+    </div>
+
+    <!-- NOTATNIK KARTA ZASAD -->
+    <div id="rules-panel" style="display: none; position: absolute; top: 10%; left: 50%; transform: translateX(-50%); width: 1000px; max-height: 80%; z-index: 1000; overflow-y: auto;" class="paper-notebook">
+      <div style="text-align: center;">
+        <h2>TAJNE: BAZA DANYCH JEDNOSTEK</h2>
+        <div style="text-align: right; margin-bottom: 20px;">
+          <button id="btn-close-rules" style="color: #2c3e50; border-color: #2c3e50; font-weight: bold;">ZAMKNIJ AKTA [X]</button>
+        </div>
+      </div>
+      
+      <table class="paper-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 1rem;">
+        <thead>
+          <tr>
+            <th style="min-width: 180px;">JEDNOSTKA</th>
+            <th>ZAS.</th>
+            <th>KOGO NISZCZY</th>
+            <th>NISZCZONA PRZEZ</th>
+            <th>SZTUK</th>
+          </tr>
+        </thead>
+        <tbody style="vertical-align: top;">
+          <tr><td><img src="/sprites/pancernik.png" class="sprite-stamp" alt="Pancernik"> Pancernik</td><td>2</td><td>Pancernik, okręt rakietowy, krążownik, niszczyciel, eskortowiec, trałowiec, okręt desantowy</td><td>Pancernik, okręt podwodny, bateria nadbrzeżna, mina</td><td>3</td></tr>
+          <tr><td><img src="/sprites/okret_rakietowy.png" class="sprite-stamp" alt="Okręt rakietowy"> Okręt rakietowy</td><td>1</td><td>Okręt rakietowy, krążownik, niszczyciel, eskortowiec, trałowiec, okręt desantowy, bateria nadbrzeżna</td><td>Okręt rakietowy, pancernik, okręt podwodny, mina</td><td>3</td></tr>
+          <tr><td><img src="/sprites/krazownik.png" class="sprite-stamp" alt="Krążownik"> Krążownik</td><td>2</td><td>Krążownik, niszczyciel, eskortowiec, trałowiec, okręt desantowy</td><td>Krążownik, pancernik, okręt rakietowy, okręt podwodny, bateria nadbrzeżna, mina</td><td>3</td></tr>
+          <tr><td><img src="/sprites/niszczyciel.png" class="sprite-stamp" alt="Niszczyciel"> Niszczyciel</td><td>4</td><td>Niszczyciel, okręt podwodny – gdy niszczyciel atakuje pierwszy, eskortowiec, trałowiec, okręt desantowy</td><td>Niszczyciel, pancernik, okręt rakietowy, krążownik, okręt podwodny – gdy okręt podwodny atakuje pierwszy, bateria nadbrzeżna, mina</td><td>4</td></tr>
+          <tr><td><img src="/sprites/okret_podwodny.png" class="sprite-stamp" alt="Okręt podwodny"> Okręt podwodny</td><td>2</td><td>Okręt podwodny, pancernik, okręt rakietowy, krążownik, niszczyciel – gdy okręt podwodny atakuje pierwszy, trałowiec, okręt desantowy</td><td>Okręt podwodny, eskortowiec, niszczyciel – gdy niszczyciel atakuje pierwszy, bateria nadbrzeżna, mina</td><td>4</td></tr>
+          <tr><td><img src="/sprites/eskortowiec.png" class="sprite-stamp" alt="Eskortowiec"> Eskortowiec</td><td>3</td><td>Eskortowiec, okręt podwodny, trałowiec, okręt desantowy</td><td>Eskortowiec, pancernik, okręt rakietowy, krążownik, niszczyciel, bateria nadbrzeżna, mina</td><td>4</td></tr>
+          <tr><td><img src="/sprites/tralowiec.png" class="sprite-stamp" alt="Trałowiec"> Trałowiec</td><td>2</td><td>Trałowiec, okręt desantowy (Stawia/zdejmuje miny)</td><td>Trałowiec, pancernik, okręt rakietowy, krążownik, niszczyciel, okręt podwodny, eskortowiec, bateria nadbrzeżna, mina</td><td>4</td></tr>
+          <tr><td><img src="/sprites/okret_desantowy.png" class="sprite-stamp" alt="Okręt desantowy"> Okr. desantowy</td><td>1</td><td>Nie atakuje</td><td>Pancernik, okręt rakietowy, krążownik, niszczyciel, okręt podwodny, eskortowiec, trałowiec, bateria nadbrzeżna, mina</td><td>1</td></tr>
+          <tr><td><img src="/sprites/bateria_nadbrzezna.png" class="sprite-stamp" alt="Bateria"> Bateria nadb.</td><td>-</td><td>Wszystkie jednostki w zasięgu jednego pola oprócz okrętu rakietowego</td><td>Okręt rakietowy</td><td>4</td></tr>
+          <tr><td><img src="/sprites/mina.png" class="sprite-stamp" alt="Mina"> Mina</td><td>-</td><td>Zaatakowana bije wszystkie jednostki oprócz trałowca, jeżeli ten wykona akcję „Zdejmuję minę”</td><td>-</td><td>6</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+  
+  <script>
+    setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('pl-PL'); }, 1000);
+
+    // SKRYPT: PRZEŁĄCZNIK TRYBÓW (CSS)
+    document.getElementById('mode-selector').addEventListener('change', (e) => {
+      document.getElementById('theme-style').href = `./${e.target.value}`;
+    });
+
+    // SKRYPT: NOTATNIK
+    const rulesPanel = document.getElementById('rules-panel');
+    const btnToggleRules = document.getElementById('btn-toggle-rules');
+    const btnCloseRules = document.getElementById('btn-close-rules');
+    if (btnToggleRules) btnToggleRules.addEventListener('click', () => { rulesPanel.style.display = rulesPanel.style.display === 'none' || rulesPanel.style.display === '' ? 'block' : 'none'; });
+    if (btnCloseRules) btnCloseRules.addEventListener('click', () => { rulesPanel.style.display = 'none'; });
+
+    // SKRYPT: PAN I ZOOM ŚRODKOWYM PRZYCISKIEM MYSZY (MMB)
+    let rangeValue = 20;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+
+    // ZMIANA: Zamiast canvasa, przesuwamy i skalujemy cały `world-layer`
+    const worldLayer = document.getElementById('world-layer');
+    const crtContainer = document.getElementById('crt-container');
+    const zoomText = document.getElementById('zoom-val');
+    const radarRangeText = document.getElementById('radar-range-text');
+    const canvasEl = document.getElementById('game-canvas'); // potrzebne tylko do kursorów i obsługi zdarzeń myszy
+
+    function updateTransform() {
+      zoomText.textContent = rangeValue;
+      radarRangeText.textContent = rangeValue;
+      let currentScale = 20 / rangeValue;
+      
+      // Aplikujemy transformacje do głównego kontenera planszy + obrazka
+      if(worldLayer) {
+        worldLayer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+      }
+    }
+
+    // PRZESUWANIE EKRANU MMB (Pan)
+    crtContainer.addEventListener('mousedown', (e) => {
+      if (e.button === 1) { // 1 = Środkowy przycisk myszy
+        e.preventDefault(); 
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        canvasEl.style.cursor = 'grabbing';
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      translateX = e.clientX - startX;
+      translateY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 1) {
+        isDragging = false;
+        canvasEl.style.cursor = 'crosshair';
+      }
+    });
+
+    // Przyciski zoomu w UI
+    document.getElementById('btn-zoom-in').addEventListener('click', () => { if (rangeValue > 5) { rangeValue -= 5; updateTransform(); } });
+    document.getElementById('btn-zoom-out').addEventListener('click', () => { if (rangeValue < 50) { rangeValue += 5; updateTransform(); } });
+
+    // RESETOWANIE WIDOKU KAMERY
+    document.getElementById('btn-reset-view').addEventListener('click', () => {
+      rangeValue = 20; // domyślny zoom
+      translateX = 0;  // wyśrodkowanie w poziomie
+      translateY = 0;  // wyśrodkowanie w pionie
+      updateTransform();
+    });
+
+    // RĘCZNY TRACKER WROGA
+    const enemyUnits = [
+      { name: 'Pancernik', max: 3 }, { name: 'Okręt rakietowy', max: 3 }, { name: 'Krążownik', max: 3 },
+      { name: 'Niszczyciel', max: 4 }, { name: 'Okręt podwodny', max: 4 }, { name: 'Eskortowiec', max: 4 },
+      { name: 'Trałowiec', max: 4 }, { name: 'Okręt desantowy', max: 1 }, { name: 'Bat. nadbrzeżna', max: 4 }
+    ];
+    const trackerContainer = document.getElementById('manual-tracker');
+    enemyUnits.forEach((unit, index) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex'; row.style.justifyContent = 'space-between'; row.style.alignItems = 'center';
+      row.innerHTML = `<span style="font-size: 0.95rem;">${unit.name}</span><div style="display: flex; gap: 5px; align-items: center; font-size: 1.1rem; color: var(--text-active);"><button onclick="updateTracker(${index}, -1)" style="padding: 2px 8px; font-size: 1rem;">-</button><span id="trk-val-${index}" style="width: 25px; text-align: center;">0</span><span style="color: var(--text-dim);">/${unit.max}</span><button onclick="updateTracker(${index}, 1)" style="padding: 2px 8px; font-size: 1rem;">+</button></div>`;
+      trackerContainer.appendChild(row);
+    });
+    window.updateTracker = function(index, delta) {
+      const valSpan = document.getElementById(`trk-val-${index}`);
+      let next = parseInt(valSpan.textContent) + delta;
+      if (next >= 0 && next <= enemyUnits[index].max) valSpan.textContent = next;
+    };
+  </script>
+</body>
+</html>
