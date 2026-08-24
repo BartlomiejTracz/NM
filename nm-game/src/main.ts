@@ -7,8 +7,7 @@ import { InputHandler } from './render/inputHandler';
 import type { Unit, GameState } from './engine/types';
 import { getLegalMoves } from './engine/movement';
 import { INITIAL_INVENTORY, isValidPlacement } from './engine/setup';
-import { createInitialBoard, isExitTile } from './engine/board';
-
+import { createInitialBoard } from './engine/board';
 // ==========================================
 // 0. SOCKET.IO – POŁĄCZENIE Z SERWEREM
 // ==========================================

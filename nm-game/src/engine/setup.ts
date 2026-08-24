@@ -14,8 +14,7 @@ export const INITIAL_INVENTORY: Record<UnitType, number> = {
 };
 
 // Dodano ignoreUnitId dla logiki zamiany i nakładania
-export function isValidPlacement(state: GameState, type: string, pos: Position, playerId: string, ignoreUnitId?: string): boolean {
-  const tile = state.board.tiles[pos.row][pos.col];
+export function isValidPlacement(state: GameState, _type: string, pos: Position, playerId: string, ignoreUnitId?: string): boolean {  const tile = state.board.tiles[pos.row][pos.col];
   const myPortPrefix = playerId === 'a' ? 'port_a' : 'port_b';
 
   // 1. Gracz może stawiać tylko w obrębie swojego portu (obojętnie czy mur, czy woda)
