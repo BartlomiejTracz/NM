@@ -4,6 +4,7 @@ import { TILE_SIZE } from './boardRenderer';
 import { getLegalMoves } from '../engine/movement';
 import { UNIT_RULES } from '../engine/rules.config';
 import { isValidPlacement } from '../engine/setup';
+import { isExitTile } from '../engine/board';
 
 export class InputHandler {
   private selectedUnitId: string | null = null;
@@ -95,12 +96,20 @@ export class InputHandler {
       if (draggedUnit) {
         const targetUnit = state.units.find(u => u.position.col === targetPos.col && u.position.row === targetPos.row && u.id !== draggedUnit.id);
 
+        // PANCERNA BLOKADA: Bateria na wyjściu
+        if (draggedUnit.type === 'bateria_nadbrzezna' && isExitTile(targetPos)) {
+            alert('Dowództwo zabrania! Bateria nadbrzeżna zablokowałaby wyjście z portu.');
+            this.draggedUnitId = null; store.setState(state); return;
+        }
+        if (targetUnit && targetUnit.type === 'bateria_nadbrzezna' && isExitTile(draggedUnit.position)) {
+            alert('Dowództwo zabrania! Bateria nadbrzeżna zablokowałaby wyjście z portu.');
+            this.draggedUnitId = null; store.setState(state); return;
+        }
+
         // MECHANIKA ZAMIANY
         if (targetUnit && targetUnit.ownerId === localPlayer) {
           const originalPos = { ...draggedUnit.position };
           
-          // Zdejmujemy ograniczenia ze ścian - skoro oba okręty są już poprawnie 
-          // umieszczone w porcie, po prostu zamieniają się miejscami!
           draggedUnit.position = targetPos;
           targetUnit.position = originalPos;
           

@@ -24,7 +24,8 @@ const socket = io(serverUrl);
 // ==========================================
 const gameCanvas = document.getElementById('game-canvas') as HTMLCanvasElement;
 const setupCanvas = document.getElementById('setup-canvas') as HTMLCanvasElement;
-const turnIndicator = document.getElementById('turn-indicator') as HTMLHeadingElement;
+const turnBanner = document.getElementById('turn-banner') as HTMLDivElement;
+const roundNumber = document.getElementById('round-number') as HTMLSpanElement;
 const inventoryList = document.getElementById('inventory-list') as HTMLDivElement;
 const gameCtx = gameCanvas.getContext('2d')!;
 
@@ -185,6 +186,18 @@ let currentInventory = { ...INITIAL_INVENTORY };
 function showScreen(screenId: 'screen-menu' | 'screen-setup' | 'screen-game') {
   document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
   document.getElementById(screenId)?.classList.add('active');
+
+  // PANCERNY RESET: Jeśli wchodzimy do kreatora floty, resetujemy przycisk!
+  if (screenId === 'screen-setup') {
+    const btnSave = document.getElementById('btn-save-setup') as HTMLButtonElement;
+    if (btnSave) {
+      btnSave.innerText = 'ZATWIERDŹ FLOTĘ';
+      btnSave.disabled = false;
+      btnSave.style.opacity = '1';
+      btnSave.style.borderColor = 'var(--text-active)';
+      btnSave.style.color = 'var(--text-glow)';
+    }
+  }
 }
 
 btnMenuFleetCreator?.addEventListener('click', () => {
@@ -496,13 +509,34 @@ store.subscribe((state: GameState) => {
   const currentRound = Math.ceil(state.turn / 2);
   const myRole = myNetworkRole || (window as any).myNetworkRole;
   
-  if (state.phase === 'finished') {
-    turnIndicator.textContent = `KONIEC GRY! Wygrał Gracz ${state.winnerId?.toUpperCase()} (Runda ${currentRound})`; 
-    turnIndicator.style.color = '#fbbf24';
-  } else {
-    const isMyTurn = myRole === state.activePlayerId;
-    turnIndicator.textContent = `Runda ${currentRound} | Tura: ${state.activePlayerId.toUpperCase()} ${isMyTurn ? '(TWÓJ RUCH)' : '(CZEKAJ)'}`;
-    turnIndicator.style.color = isMyTurn ? '#62d83b' : '#fff';
+  if (roundNumber) roundNumber.textContent = currentRound.toString();
+
+  if (turnBanner) {
+    if (state.phase === 'finished') {
+      turnBanner.textContent = `ZWYCIĘSTWO GRACZA ${state.winnerId?.toUpperCase()}!`;
+      turnBanner.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
+      turnBanner.style.color = '#fbbf24';
+      turnBanner.style.borderColor = '#fbbf24';
+      turnBanner.className = ''; // Wyłącza pulsowanie
+    } else {
+      const isMyTurn = myRole === state.activePlayerId;
+      
+      if (isMyTurn) {
+        // ZIELONY, PULSUJĄCY ALARM - TWÓJ RUCH
+        turnBanner.textContent = '▶ TWÓJ RUCH ◀';
+        turnBanner.style.backgroundColor = 'rgba(98, 216, 59, 0.15)';
+        turnBanner.style.color = '#62d83b';
+        turnBanner.style.borderColor = '#62d83b';
+        turnBanner.className = 'turn-active'; 
+      } else {
+        // CZERWONY, ZIMNY KOMUNIKAT - RUCH WROGA
+        turnBanner.textContent = 'RUCH WROGA...';
+        turnBanner.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        turnBanner.style.color = '#ef4444';
+        turnBanner.style.borderColor = '#ef4444';
+        turnBanner.className = ''; 
+      }
+    }
   }
 });
 

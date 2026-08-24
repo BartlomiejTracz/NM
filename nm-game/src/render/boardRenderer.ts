@@ -1,5 +1,3 @@
-// src/render/boardRenderer.ts
-
 import type { GameState } from '../engine/types';
 import { isExitTile } from '../engine/board';
 
@@ -8,7 +6,8 @@ export const TILE_SIZE = 40;
 const RADAR_COLORS = {
   sea: 'transparent',       
   port: '#0a300c',          
-  portExit: '#5c7a14',      
+  portExitBg: 'rgba(251, 191, 36, 0.2)', // Żółte tło wyjścia
+  portExitBorder: '#fbbf24',             // Żółta ramka     
   wall: '#39B52A',          
   grid: '#075518',          
   dots: '#39B52A'           
@@ -43,24 +42,21 @@ export class BoardRenderer {
         // Rysowanie portów
         if (tile.startsWith('port')) {
           if (isExitTile({ col: c, row: r })) {
-            // Wyjście z portu
-            this.ctx.fillStyle = RADAR_COLORS.portExit;
+            // NOWY STYL WYJŚCIA Z PORTU (Bez X)
+            this.ctx.fillStyle = RADAR_COLORS.portExitBg;
             this.ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             
-            this.ctx.strokeStyle = RADAR_COLORS.dots;
+            this.ctx.strokeStyle = RADAR_COLORS.portExitBorder;
             this.ctx.lineWidth = 1;
-            this.ctx.beginPath();
-            this.ctx.moveTo(x + 10, y + 10);
-            this.ctx.lineTo(x + TILE_SIZE - 10, y + TILE_SIZE - 10);
-            this.ctx.moveTo(x + TILE_SIZE - 10, y + 10);
-            this.ctx.lineTo(x + 10, y + TILE_SIZE - 10);
-            this.ctx.stroke();
+            this.ctx.setLineDash([4, 4]); // Przerywana linia dla oznaczenia strefy
+            this.ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+            this.ctx.setLineDash([]); // Reset
           } else {
             // Zamknięty port
             this.ctx.fillStyle = RADAR_COLORS.port;
             this.ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
             
-            // INTELIGENTNE RYSOWANIE OBWÓDKI PORTU (Zamyka wyrwy)
+            // INTELIGENTNE RYSOWANIE OBWÓDKI PORTU
             this.ctx.strokeStyle = RADAR_COLORS.wall;
             this.ctx.lineWidth = 4;
 

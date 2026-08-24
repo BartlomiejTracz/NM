@@ -192,23 +192,35 @@
     </div>
 
     <!-- PRAWY PANEL -->
+    <!-- PRAWY PANEL -->
     <div class="panel right-panel">
       <h3>LEGENDA</h3>
-      <div class="legend-item"><div class="legend-icon" style="background: var(--radar-sea);"></div> WODA</div>
-      <div class="legend-item"><div class="legend-icon" style="background: #176d1a;"></div> WYSPA</div>
-      <div class="legend-item"><div class="legend-icon" style="border-color: var(--text-active);">·</div> OBSZAR GRY</div>
-      <div class="legend-item"><div class="legend-icon" style="border-top: 1px solid #075518; height:0;"></div> SIATKA</div>
-      <div class="legend-item"><div class="legend-icon" style="border:none; color:var(--text-glow);">+</div> KURSOR</div>
+      <div class="legend-item"><div class="legend-icon" style="background: var(--radar-sea);"></div> WODA (OTWARTE MORZE)</div>
+      <div class="legend-item"><div class="legend-icon" style="background: rgba(23, 109, 26, 0.3); border: 1px dashed #176d1a;"></div> WODY PORTOWE</div>
+      <div class="legend-item"><div class="legend-icon" style="border-color: var(--text-active);">·</div> POLE NEUTRALNE</div>
+      <div class="legend-item"><div class="legend-icon" style="background: rgba(251, 191, 36, 0.2); border: 1px dashed #fbbf24;"></div> WYJŚCIE Z PORTU</div>
+      <div class="legend-item"><div class="legend-icon" style="border-top: 1px solid #075518; height:0;"></div> SIATKA RADARU</div>
+      <div class="legend-item"><div class="legend-icon" style="border:none; color:var(--text-glow);">+</div> CELOWNIK (KURSOR)</div>
 
-      <h3 style="margin-top: 20px;">INFORMACJE</h3>
-      <div class="info-row">SEKTOR: <span id="ui-sector" class="info-val">C-7</span></div>
-      <div class="info-row">POZYCJA: <span id="ui-coords" class="info-val">15, 8</span></div>
-      <div class="info-row">GŁĘBOKOŚĆ: <span class="info-val">--</span></div>
-      <div class="info-row">POGODA: <span class="info-val">POGODNIE</span></div>
-      <div class="info-row">WIATR: <span class="info-val">12 W</span></div>
-      <div class="info-row" style="margin-top: 15px; color: var(--text-active);">TURA: <span id="turn-indicator" style="color: #fff;">Runda 1 | Tura gracza: A</span></div>
-      
-      <div id="dispatch-console"></div>
+      <!-- POTĘŻNY WSKAŹNIK TURY (Przesunięty wyżej, zaraz pod legendę) -->
+      <div id="turn-banner" style="margin-top: 30px; padding: 15px 10px; text-align: center; border: 2px solid; font-size: 1.6rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 5px currentColor; transition: all 0.3s ease;">
+        ŁADOWANIE...
+      </div>
+      <div class="info-row" style="margin-top: 10px; text-align: center; color: var(--text-dim); font-size: 1.2rem;">
+        RUNDA OPERACYJNA: <span id="round-number" class="info-val" style="color: #fff;">1</span>
+      </div>
+
+      <style>
+        @keyframes pulse-turn {
+          0% { box-shadow: 0 0 5px rgba(98, 216, 59, 0.3); }
+          50% { box-shadow: 0 0 25px rgba(98, 216, 59, 0.8); }
+          100% { box-shadow: 0 0 5px rgba(98, 216, 59, 0.3); }
+        }
+        .turn-active { animation: pulse-turn 1.5s infinite; }
+      </style>
+
+      <h3 style="margin-top: 30px;">RAPORTY Z FRONTU</h3>
+      <div id="dispatch-console" style="flex: 1; overflow-y: auto; margin-top: 10px;"></div>
     </div>
 
     <div class="footer-area">
