@@ -38,16 +38,23 @@ export class GameStore {
 
   // Próbuje wykonać ruch i powiadamia subskrybentów o ewentualnym nowym stanie
   dispatch(action: MoveAction, playerId: string) {
-    const { newState, error } = applyMove(this.state, action, playerId);
-    
-    if (error) {
-      console.warn('Nieudany ruch:', error);
-      return false; // Ruch się nie udał
-    }
+    try {
+      const { newState, error } = applyMove(this.state, action, playerId);
+      
+      if (error) {
+        console.warn('Nieudany ruch:', error);
+        return false; // Ruch się nie udał
+      }
 
-    this.state = newState;
-    this.notify();
-    return true; // Ruch wykonany pomyślnie
+      this.state = newState;
+      this.notify();
+      return true; // Ruch wykonany pomyślnie
+    } catch (criticalError) {
+      // PANCERNE ZABEZPIECZENIE: Zamiast wieszać grę, łapiemy błąd z silnika!
+      console.error('❌ BŁĄD KRYTYCZNY W SILNIKU GRY (applyMove):', criticalError);
+      alert('Wykryto awarię silnika gry przy przetwarzaniu ruchu! Sprawdź konsolę (F12).');
+      return false;
+    }
   }
 
   // Ustawia stan bezpośrednio (przydatne np. do rozstawienia początkowego)

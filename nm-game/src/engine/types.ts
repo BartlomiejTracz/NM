@@ -1,5 +1,3 @@
-// src/engine/types.ts
-
 export type UnitType =
   | 'pancernik'
   | 'okret_rakietowy'
@@ -25,6 +23,7 @@ export interface Unit {
   alive: boolean;
   revealed: boolean;
   turnsInNeutralZone: number;
+  destroyedAtTurn?: number; // <-- NOWE POLE (śledzenie czasu zatonięcia)
 }
 
 export type TileKind = 'sea' | 'neutral' | 'island' | 'port_a' | 'port_a_wall' | 'port_b' | 'port_b_wall';
@@ -51,5 +50,5 @@ export interface GameState {
   phase: 'setup' | 'lobby' | 'playing' | 'finished';
   winnerId: string | null;
   setupInventory?: Record<UnitType, number>;
-  logs: string[]; // <-- DODANE POLE NA DEPESZE
+  logs: string[];
 }

@@ -170,7 +170,10 @@ socket.on('game_started', (data: any) => {
 socket.on('error', (msg: string) => { alert(`BŁĄD KOMUNIKACJI: ${msg}`); });
 
 socket.on('sync_action', (action: any) => {
-  store.dispatch(action, store.getState().activePlayerId);
+  const success = store.dispatch(action, store.getState().activePlayerId);
+  if (!success) {
+    console.warn('⚠️ Uwaga: Zsynchronizowana akcja wroga została odrzucona przez lokalny silnik!', action);
+  }
 });
 
 // ==========================================

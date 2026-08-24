@@ -1,5 +1,3 @@
-// src/engine/gameState.ts
-
 import type { GameState, MoveAction, UnitType } from './types';
 import { checkWinCondition } from './winCondition';
 import { getTile } from './board';
@@ -37,11 +35,10 @@ export function applyMove(state: GameState, action: MoveAction, playerId: string
     unit.position = action.to;
     newState.logs.push(`${playerPrefix} ${formatName(unit.type)} przemieścił się na koordynaty (${action.to.col}, ${action.to.row}).`);
   } 
- // === STAWIANIE MINY ===
+  // === STAWIANIE MINY ===
   else if (action.kind === 'lay_mine') {
     if (unit.type !== 'tralowiec') return { newState: state, error: 'Tylko trałowiec może stawiać miny' };
     
-    // Sprawdzanie fizyczności terenu (nie stawiamy na murach i lądzie)
     const targetTile = getTile(newState.board, action.at);
     if (!targetTile || targetTile === 'island' || targetTile.includes('wall')) {
       return { newState: state, error: 'Miny można stawiać tylko na wodzie' };
@@ -51,12 +48,12 @@ export function applyMove(state: GameState, action: MoveAction, playerId: string
     if (mineCount >= 6) return { newState: state, error: 'Brak min w magazynie' };
 
     newState.units.push({
-      id: `mina_${Date.now()}`, 
+      id: `mina_${playerId}_${state.turn}`, // <- Bezpieczne ID sieciowe
       ownerId: playerId, 
       type: 'mina', 
       position: action.at, 
       alive: true, 
-      revealed: true, // Zmienione na "true" dla ułatwienia testów
+      revealed: false, 
       turnsInNeutralZone: 0
     });
     newState.logs.push(`${playerPrefix} TRAŁOWIEC postawił ładunek na koordynatach (${action.at.col}, ${action.at.row}).`);
@@ -68,6 +65,7 @@ export function applyMove(state: GameState, action: MoveAction, playerId: string
     if (!targetMine) return { newState: state, error: 'Brak miny na tym polu' };
 
     targetMine.alive = false;
+    targetMine.destroyedAtTurn = newState.turn; // <- Zapis czasu
     targetMine.revealed = true;
     newState.logs.push(`${playerPrefix} TRAŁOWIEC pomyślnie rozbroił minę wroga na koordynatach (${action.at.col}, ${action.at.row}).`);
   }
@@ -80,17 +78,20 @@ export function applyMove(state: GameState, action: MoveAction, playerId: string
     unit.revealed = true;
 
     if (target.type === 'mina') {
-      // Jeśli wpadniesz na minę (lub ją zaatakujesz nie będąc trałowcem używającym akcji Zdejmij Minę), wybuchacie oboje!
       unit.alive = false;
+      unit.destroyedAtTurn = newState.turn;
       target.alive = false;
+      target.destroyedAtTurn = newState.turn;
       newState.logs.push(`${playerPrefix} ${formatName(unit.type)} natrafił na MINĘ! Jednostka zatonęła wraz z ładunkiem.`);
     } else {
       const canKill = DESTROYS[unit.type].includes(target.type);
       if (canKill) {
         target.alive = false; 
+        target.destroyedAtTurn = newState.turn;
         newState.logs.push(`${playerPrefix} ${formatName(unit.type)} zaatakował i zniszczył ${formatName(target.type)}!`);
       } else {
         unit.alive = false; 
+        unit.destroyedAtTurn = newState.turn;
         newState.logs.push(`${playerPrefix} ${formatName(unit.type)} zaatakował ${formatName(target.type)}, ale atak się nie powiódł. Atakujący zatonął!`);
       }
     }
@@ -104,6 +105,7 @@ export function applyMove(state: GameState, action: MoveAction, playerId: string
         u.turnsInNeutralZone += 1;
         if (u.turnsInNeutralZone >= 4) {
           u.alive = false;
+          u.destroyedAtTurn = newState.turn; // <- Nawet jednostki z internowania dostają ładny zanikający "X"
           newState.logs.push(`${playerPrefix} ${formatName(u.type)} przebywał za długo na wodach neutralnych i został internowany!`);
         }
       } else {
