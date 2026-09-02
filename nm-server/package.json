@@ -6,16 +6,13 @@
   "main": "server.ts",
   "scripts": {
     "start": "npx tsx server.ts",
-    "build": "echo 'Brak wymaganej kompilacji budowania'"
+    "build": "echo 'Brak kompilacji, lecimy w locie'"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "socket.io": "^4.7.5"
-  },
-  "devDependencies": {
+    "socket.io": "^4.7.5",
     "tsx": "^4.7.1",
     "typescript": "^5.4.2"
   }
-  
 }
