@@ -6,6 +6,7 @@
   <title>Manewry Morskie — gra strategiczna dla dwóch osób</title>
   <link id="theme-style" rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./tactical.css">
+  <link rel="stylesheet" href="./mobile.css">
 </head>
 <body>
 
@@ -19,8 +20,8 @@
         </div>
         <section class="play-card" aria-labelledby="play-title"><p class="eyebrow">Gotowi do wypłynięcia?</p><h2 id="play-title">Rozpocznij grę</h2><p>Zaproś znajomą osobę. Jedno z was tworzy pokój, drugie wpisuje jego kod.</p><p id="connection-status" role="status" aria-live="polite">Łączenie z serwerem…</p><button id="btn-create-room" class="btn primary">Utwórz pokój</button><div class="divider"><span>lub dołącz do znajomego</span></div><label for="input-room-code">Kod pokoju</label><div class="join-row"><input id="input-room-code" placeholder="np. A1B2C3D4" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="room-hint"><button id="btn-join-room" class="btn">Dołącz</button></div><small id="room-hint">Ośmioznakowy kod otrzymasz od osoby tworzącej pokój.</small><div id="room-code-display" role="status" style="display:none"></div><div class="card-bottom"><span>Chcesz najpierw poćwiczyć rozstawienie?</span><button id="btn-menu-fleet-creator" class="text-button">Otwórz kreator floty</button></div></section>
       </section>
-      <section id="quick-start" class="quick-start" aria-labelledby="intro-title"><div class="section-heading"><div><p class="eyebrow">Pierwszy raz na pokładzie</p><h2 id="intro-title">Od portu do pierwszego ruchu</h2></div><button id="btn-menu-rules" class="btn">Zasady i jednostki</button></div><div class="steps"><article><span class="step-number">01</span><h3>Połączcie się</h3><p>Utwórz pokój i przekaż kod drugiej osobie. Gdy dołączy, oboje przejdziecie do przygotowania flot.</p></article><article><span class="step-number">02</span><h3>Rozstaw flotę</h3><p>Przeciągnij wszystkie 30 jednostek z magazynu na dozwolone pola swojego portu. Zatwierdź flotę i poczekaj na rywala.</p></article><article><span class="step-number">03</span><h3>Wykonaj manewr</h3><p>W swojej turze kliknij okręt, a potem podświetlone pole, aby go przesunąć. Kliknięcie wrogiej jednostki zleca atak, jeśli jest dozwolony.</p></article></div></section>
-      <section class="rules-intro"><div><p class="eyebrow">Twój cel</p><h2>Dwie drogi<br>do zwycięstwa.</h2><p>Wprowadź swój okręt desantowy do portu przeciwnika <strong>lub zniszcz jego desant</strong>. Chroń własny — nie może atakować.</p></div><div class="rule-questions"><details open><summary>Co mogę zrobić w swojej turze?</summary><p>Wykonujesz jedną akcję: ruch, atak albo operację minową trałowca. Zasięg zależy od jednostki. Ruch może prowadzić także po skosie, ale nie przez inne okręty ani ściany portu.</p></details><details><summary>Dlaczego nie znam okrętów przeciwnika?</summary><p>Typy nierozpoznanych jednostek oraz wrogie miny są ukryte. Obserwuj ruchy i wyniki starć. Nie każdy okręt pokona każdego — tabela jednostek pomoże wybrać atak.</p></details><details><summary>Na co uważać podczas pierwszej gry?</summary><p>Jednakowe jednostki niszczą się wzajemnie. Ukryta mina może zatopić przepływający okręt. Nie pozostawiaj jednostki w strefie neutralnej: po czwartej własnej turze zakończonej w tej strefie zostanie internowana.</p></details><details><summary>Jak przygotować flotę bez przeciwnika?</summary><p>Otwórz kreator floty. Przeciągaj jednostki z magazynu, zamieniaj je miejscami i użyj prawego przycisku myszy, aby cofnąć jednostkę. Gotowy schemat możesz pobrać i wczytać przed kolejną partią. Najwygodniej grać na komputerze z myszą.</p></details></div></section>
+      <section id="quick-start" class="quick-start" aria-labelledby="intro-title"><div class="section-heading"><div><p class="eyebrow">Pierwszy raz na pokładzie</p><h2 id="intro-title">Od portu do pierwszego ruchu</h2></div><button id="btn-menu-rules" class="btn">Zasady i jednostki</button></div><div class="steps"><article><span class="step-number">01</span><h3>Połączcie się</h3><p>Utwórz pokój i przekaż kod drugiej osobie. Gdy dołączy, oboje przejdziecie do przygotowania flot.</p></article><article><span class="step-number">02</span><h3>Rozstaw flotę</h3><p>Rozstaw 30 jednostek: wybierz okręt z magazynu i dotknij dozwolonego pola swojego portu. Zatwierdź flotę i poczekaj na rywala.</p></article><article><span class="step-number">03</span><h3>Wykonaj manewr</h3><p>W swojej turze kliknij okręt, a potem podświetlone pole, aby go przesunąć. Kliknięcie wrogiej jednostki zleca atak, jeśli jest dozwolony.</p></article></div></section>
+      <section class="rules-intro"><div><p class="eyebrow">Twój cel</p><h2>Dwie drogi<br>do zwycięstwa.</h2><p>Wprowadź swój okręt desantowy do portu przeciwnika <strong>lub zniszcz jego desant</strong>. Chroń własny — nie może atakować.</p></div><div class="rule-questions"><details open><summary>Co mogę zrobić w swojej turze?</summary><p>Wykonujesz jedną akcję: ruch, atak albo operację minową trałowca. Zasięg zależy od jednostki. Ruch może prowadzić także po skosie, ale nie przez inne okręty ani ściany portu.</p></details><details><summary>Dlaczego nie znam okrętów przeciwnika?</summary><p>Typy nierozpoznanych jednostek oraz wrogie miny są ukryte. Obserwuj ruchy i wyniki starć. Nie każdy okręt pokona każdego — tabela jednostek pomoże wybrać atak.</p></details><details><summary>Na co uważać podczas pierwszej gry?</summary><p>Jednakowe jednostki niszczą się wzajemnie. Ukryta mina może zatopić przepływający okręt. Nie pozostawiaj jednostki w strefie neutralnej: po czwartej własnej turze zakończonej w tej strefie zostanie internowana.</p></details><details><summary>Jak przygotować flotę bez przeciwnika?</summary><p>Otwórz kreator floty. Przeciągaj jednostki z magazynu, zamieniaj je miejscami i użyj prawego przycisku myszy, aby cofnąć jednostkę. Gotowy schemat możesz pobrać i wczytać przed kolejną partią. Na telefonie dotknij jednostki w magazynie, a następnie pola portu. Przycisk „Powiększ port” ułatwia precyzyjne rozstawianie.</p></details></div></section>
       <footer class="landing-footer"><span>Manewry Morskie</span><button data-atmosphere-toggle aria-pressed="false">Wstrzymaj animację radaru</button><span>Rozpoznanie. Decyzja. Manewr.</span></footer>
     </div>
   </main>
@@ -49,7 +50,9 @@
       <div class="control-group">
         <div class="control-label">JEDNOSTKI W PORCIE:</div>
       </div>
-      <!-- Zmodyfikowany kontener inwentarza -->
+      <p id="setup-selection" role="status">Wybierz jednostkę, następnie pole portu.</p>
+      <div class="setup-tools"><button id="btn-remove-unit">Cofnij jednostkę</button><button id="btn-cancel-placement">Anuluj wybór</button><button id="btn-setup-zoom" aria-pressed="false">Powiększ port</button></div>
+      <!-- Jednostki wybierane dotykiem lub przeciąganiem -->
       <div id="inventory-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px; padding-right: 5px;"></div>
     </div>
 
@@ -66,7 +69,7 @@
 
     <!-- PRAWY PANEL (AKCJE I ZARZĄDZANIE) -->
     <div class="panel right-panel">
-      <h3>02 / MOBILIZACJA</h3><p class="setup-help">Przeciągnij jednostki z magazynu do swojego portu. Prawy przycisk myszy cofa jednostkę. Rozstaw całą flotę, zanim ją zatwierdzisz.</p>
+      <h3>02 / MOBILIZACJA</h3><p class="setup-help">Wybierz jednostkę z magazynu i dotknij pola portu. Dotknij rozstawionej jednostki, by ją przenieść lub cofnąć do magazynu. Rozstaw całą flotę, zanim ją zatwierdzisz.</p>
 
       <div class="control-group" style="margin-bottom: 15px;">
         <div class="control-label">STAN GOTOWOŚCI</div>
@@ -91,7 +94,7 @@
     <!-- STOPKA KREATORA -->
     <div class="footer-area">
       <div class="status-indicator"><div class="status-dot" style="background-color: #fbbf24; box-shadow: 0 0 10px #fbbf24;"></div> TRYB KONFIGURACJI</div>
-      <div style="color: var(--text-dim);">LPM: PRZECIĄGNIJ / ZAMIEŃ | PPM: COFNIJ DO MAGAZYNU</div>
+      <div style="color: var(--text-dim);">WYBIERZ JEDNOSTKĘ, NASTĘPNIE POLE PORTU</div>
       <div><!-- Zastępcze miejsce wyrównujące --></div>
     </div>
   </div>
@@ -118,7 +121,7 @@
       <h3>01 / KONTROLA OGNIA</h3>
 
       <div class="control-group">
-        <div class="control-label">ZASIĘG (ZOOM)</div>
+        <p class="touch-help">Dotknij okrętu, potem celu. Przesuń palcem, by przesunąć mapę. Rozsuń dwa palce, by powiększyć.</p><div class="control-label">ZASIĘG (ZOOM)</div>
         <div class="control-box">
           <span id="zoom-val">15</span>
           <div style="display: flex; flex-direction: column; font-size: 0.6rem; cursor: pointer;">
@@ -162,6 +165,7 @@
       </div>
     </div>
 
+    <nav class="mobile-map-tools" aria-label="Widok planszy"><button data-map-action="in" aria-label="Powiększ mapę">+</button><button data-map-action="reset">Cała mapa</button><button data-map-action="out" aria-label="Pomniejsz mapę">−</button></nav>
     <!-- ŚRODKOWY MONITOR -->
     <div class="center-monitor">
       <div class="monitor-bezel">
@@ -267,82 +271,6 @@
     const rulesPanel = document.getElementById('rules-panel');
     ['btn-toggle-rules', 'btn-menu-rules', 'btn-setup-rules'].forEach(id => document.getElementById(id)?.addEventListener('click', () => rulesPanel.showModal()));
     document.getElementById('btn-close-rules').addEventListener('click', () => rulesPanel.close());
-
-    // SKRYPT: PAN I ZOOM ŚRODKOWYM PRZYCISKIEM MYSZY (MMB)
-    const DEFAULT_RANGE = 15;
-    let rangeValue = DEFAULT_RANGE;
-    let translateX = 0;
-    let translateY = 0;
-    let isDragging = false;
-    let startX = 0, startY = 0;
-
-    const worldLayer = document.getElementById('world-layer');
-    const crtContainer = document.getElementById('crt-container');
-    const zoomText = document.getElementById('zoom-val');
-    const radarRangeText = document.getElementById('radar-range-text');
-    const canvasEl = document.getElementById('game-canvas');
-
-    function updateTransform() {
-      if (zoomText) zoomText.textContent = rangeValue;
-      if (radarRangeText) radarRangeText.textContent = rangeValue;
-      let currentScale = 20 / rangeValue;
-      // Keep the default framing complete on smaller displays. Manual zoom-in
-      // still allows closer inspection and dragging around the map.
-      if (rangeValue >= DEFAULT_RANGE && crtContainer?.clientWidth && canvasEl?.width) {
-        const fit = Math.min(crtContainer.clientWidth / canvasEl.width, crtContainer.clientHeight / canvasEl.height) * 0.96;
-        currentScale = Math.min(currentScale, fit);
-      }
-
-      if(worldLayer) {
-        worldLayer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
-      }
-    }
-
-    if (crtContainer) {
-      crtContainer.addEventListener('mousedown', (e) => {
-        if (e.button === 1) {
-          e.preventDefault();
-          isDragging = true;
-          startX = e.clientX - translateX;
-          startY = e.clientY - translateY;
-          if (canvasEl) canvasEl.style.cursor = 'grabbing';
-        }
-      });
-    }
-
-    window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      translateX = e.clientX - startX;
-      translateY = e.clientY - startY;
-      updateTransform();
-    });
-
-    window.addEventListener('mouseup', (e) => {
-      if (e.button === 1) {
-        isDragging = false;
-        if (canvasEl) canvasEl.style.cursor = 'crosshair';
-      }
-    });
-
-    document.getElementById('btn-zoom-in')?.addEventListener('click', () => {
-      if (rangeValue > 5) { rangeValue -= 5; updateTransform(); }
-    });
-
-    document.getElementById('btn-zoom-out')?.addEventListener('click', () => {
-      if (rangeValue < 50) { rangeValue += 5; updateTransform(); }
-    });
-
-    document.getElementById('btn-reset-view')?.addEventListener('click', () => {
-      rangeValue = DEFAULT_RANGE;
-      translateX = 0;
-      translateY = 0;
-      updateTransform();
-    });
-
-    const radarResize = new ResizeObserver(updateTransform);
-    if (crtContainer) radarResize.observe(crtContainer);
-    if (canvasEl) radarResize.observe(canvasEl);
-    updateTransform();
 
     // RĘCZNY TRACKER WROGA
     const enemyUnits = [

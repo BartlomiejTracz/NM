@@ -1,3 +1,4 @@
+import { installBoardViewport } from './render/viewport';
 import { store, emptyState } from './store/store';
 import { BoardRenderer, TILE_SIZE } from './render/boardRenderer';
 import { UnitRenderer } from './render/unitRenderer';
@@ -57,20 +58,26 @@ let setupGame: string | null = null;
 let setupUnits: Unit[] = [];
 let inventory = { ...INITIAL_INVENTORY };
 let draggedId: string | null = null;
+let selectedPlacement: Unit['type'] | null = null;
+let selectedSetupId: string | null = null;
 const role = (): PlayerId => network.session?.playerId ?? 'a';
 const gameBoard = new BoardRenderer(gameCanvas);
 const setupBoard = new BoardRenderer(setupCanvas);
 const gameUnits = new UnitRenderer(gameCanvas, role);
 const setupRenderer = new UnitRenderer(setupCanvas, role);
+installBoardViewport(gameCanvas, element('crt-container'), element('world-layer'));
 const input = new InputHandler(gameCanvas, () => network.session?.playerId ?? null, () => network.canAct, action => network.action(action));
 
 function showScreen(id: 'screen-menu' | 'screen-setup' | 'screen-game') {
+  const changed = !document.getElementById(id)!.classList.contains('active');
   document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.id === id));
+  if (changed) window.scrollTo({top:0,behavior:'instant'});
 }
 function report(error: unknown) { alert(error instanceof Error ? error.message : 'Nie udało się wykonać operacji.'); }
 function task(operation: () => Promise<unknown>) { void operation().catch(report); }
 function resetMenu() {
   localEditor = false; setupGame = null; setupUnits = []; draggedId = null;
+  selectedPlacement = null; selectedSetupId = null;
   input.reset(); store.setState(emptyState()); showScreen('screen-menu');
   roomDisplay.style.display = 'none'; dispatchConsole.replaceChildren(); renderControls();
 }
@@ -124,10 +131,23 @@ function renderSetup() {
   recalculateInventory();
   const mock: GameView = { ...store.getState(), phase: 'setup', activePlayerId: role(), units: setupUnits, logs: [] };
   setupBoard.render(mock); setupRenderer.render(mock);
+  if (selectedSetupId && !setupUnits.some(u => u.id === selectedSetupId)) selectedSetupId = null;
+  const selected = setupUnits.find(u => u.id === selectedSetupId);
+  if (selected) {
+    const ctx = setupCanvas.getContext('2d')!;
+    ctx.strokeStyle = '#ffe39b'; ctx.lineWidth = 3;
+    ctx.strokeRect(selected.position.col * TILE_SIZE + 2, selected.position.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+  }
+  element('setup-selection').textContent = selected ? 'Wybrano okręt. Dotknij nowego pola lub cofnij do magazynu.'
+    : selectedPlacement ? `Wybrano: ${selectedPlacement.replaceAll('_', ' ')}. Dotknij wolnego pola portu.` : 'Wybierz jednostkę z magazynu, a potem dotknij pola portu.';
+  button('btn-remove-unit').disabled = setupLocked() || !selected;
   inventoryList.replaceChildren();
   for (const [name, count] of Object.entries(inventory)) {
     if (name === 'mina' || count <= 0) continue;
-    const row = document.createElement('div');
+    const row = document.createElement('button');
+    row.type = 'button'; row.className = 'fleet-choice'; row.disabled = setupLocked();
+    row.setAttribute('aria-pressed', String(selectedPlacement === name));
+    row.addEventListener('click', () => { if (!setupLocked() && isUnitType(name)) { selectedPlacement = name; selectedSetupId = null; renderSetup(); } });
     row.style.cssText = 'display:flex;align-items:center;gap:10px';
     const label = document.createElement('span');
     label.textContent = `${name.toUpperCase().replaceAll('_', ' ')} (x${count})`;
@@ -184,6 +204,42 @@ button('btn-reset-setup').addEventListener('click', () => { if (!setupLocked()) 
 button('btn-lay-mine').addEventListener('click', () => { if (network.canAct) { input.actionMode = 'lay_mine'; button('btn-lay-mine').textContent = 'WYBIERZ POLE'; } });
 button('btn-clear-mine').addEventListener('click', () => { if (network.canAct) { input.actionMode = 'clear_mine'; button('btn-clear-mine').textContent = 'WYBIERZ POLE DO PRZESZUKANIA'; } });
 
+let suppressSetupClick = false;
+button('btn-remove-unit').addEventListener('click', () => {
+  if (setupLocked() || !selectedSetupId) return;
+  setupUnits = setupUnits.filter(u => u.id !== selectedSetupId); selectedSetupId = null; renderSetup();
+});
+button('btn-cancel-placement').addEventListener('click', () => { selectedPlacement = null; selectedSetupId = null; renderSetup(); });
+button('btn-setup-zoom').addEventListener('click', () => {
+  const enlarged = setupCanvas.closest('.crt-screen')!.classList.toggle('setup-enlarged');
+  button('btn-setup-zoom').textContent = enlarged ? 'Pokaż cały port' : 'Powiększ port';
+  button('btn-setup-zoom').setAttribute('aria-pressed', String(enlarged));
+});
+setupCanvas.addEventListener('click', event => {
+  if (suppressSetupClick) { suppressSetupClick = false; return; }
+  if (setupLocked()) return;
+  const pos = pointerTile(setupCanvas, event); if (!pos) return;
+  const target = setupUnits.find(u => u.position.col === pos.col && u.position.row === pos.row);
+  const selected = setupUnits.find(u => u.id === selectedSetupId);
+  if (selected && target?.id !== selected.id) {
+    const remaining = setupUnits.filter(u => u.id !== selected.id && u.id !== target?.id);
+    const state = { board: store.getState().board, units: remaining };
+    if (isValidPlacement(state, selected.type, pos, role()) && (!target || isValidPlacement(state, target.type, selected.position, role()))) {
+      const origin = selected.position; selected.position = pos; if (target) target.position = origin;
+      selectedSetupId = null; renderSetup(); return;
+    }
+    element('setup-selection').textContent = 'Nie można przenieść jednostki na to pole.'; return;
+  }
+  if (target) { selectedSetupId = target.id; selectedPlacement = null; renderSetup(); return; }
+  if (selectedPlacement && inventory[selectedPlacement] > 0) {
+    if (!isValidPlacement({board:store.getState().board,units:setupUnits}, selectedPlacement, pos, role())) {
+      element('setup-selection').textContent = 'Niedozwolone pole. Wybierz wolne pole swojego portu.'; return;
+    }
+    setupUnits.push({id:crypto.randomUUID(),ownerId:role(),type:selectedPlacement,position:pos,alive:true,revealed:selectedPlacement==='bateria_nadbrzezna',turnsInNeutralZone:0});
+    renderSetup();
+    if (inventory[selectedPlacement] === 0) { selectedPlacement = null; renderSetup(); }
+  }
+});
 setupCanvas.addEventListener('dragover', event => event.preventDefault());
 setupCanvas.addEventListener('drop', event => {
   event.preventDefault(); if (setupLocked()) return;
@@ -195,7 +251,7 @@ setupCanvas.addEventListener('drop', event => {
   renderSetup();
 });
 setupCanvas.addEventListener('pointerdown', event => {
-  if (event.button !== 0 || setupLocked()) return;
+  if (event.pointerType !== 'mouse' || event.button !== 0 || setupLocked()) return;
   const pos = pointerTile(setupCanvas, event);
   const unit = pos && setupUnits.find(u => u.position.col === pos.col && u.position.row === pos.row);
   if (unit) { draggedId = unit.id; setupCanvas.setPointerCapture(event.pointerId); }
@@ -212,6 +268,7 @@ setupCanvas.addEventListener('pointerup', event => {
   const state = { board: store.getState().board, units: remaining };
   if (!isValidPlacement(state, unit.type, pos, role()) || target && !isValidPlacement(state, target.type, unit.position, role())) return;
   const origin = { ...unit.position };
+  if (unit.position.col !== pos.col || unit.position.row !== pos.row) suppressSetupClick = true;
   unit.position = pos;
   if (target) target.position = origin;
   renderSetup();

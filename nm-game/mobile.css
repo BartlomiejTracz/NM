@@ -1,0 +1,65 @@
+/* Touch targets and responsive layouts; no document-wide gesture suppression. */
+#crt-container {touch-action:none;}
+#world-layer {flex-shrink:0;}
+#game-canvas {max-width:none;max-height:none;transition:none;}
+.fleet-choice {width:100%;text-align:left;min-height:48px;}
+.fleet-choice[aria-pressed=true] {outline:2px solid var(--text-active);background:var(--surface-alt)!important;}
+.setup-tools {display:flex;flex-wrap:wrap;gap:8px;}
+#setup-selection {font-size:.85rem;line-height:1.5;margin:0;}
+.touch-help {font-size:.8rem;line-height:1.5;}
+#screen-setup .crt-screen.setup-enlarged {overflow:auto;display:block;touch-action:pan-x pan-y;}
+#screen-setup .setup-enlarged #setup-canvas {max-width:none!important;max-height:none!important;width:720px;height:480px;}
+#screen-setup .setup-enlarged .radar-overlay-text {display:none;}
+@media(max-width:1000px) {
+  html,body {min-width:0;overflow-x:clip;}
+  :is(#screen-game,#screen-setup).active {display:flex;flex-direction:column;height:auto;min-height:100dvh;padding:12px;gap:14px;}
+  :is(#screen-game,#screen-setup) .header-area {order:0;flex-shrink:0;}
+  :is(#screen-game,#screen-setup) .center-monitor {order:2;flex:none;height:clamp(290px,60svh,650px);width:100%;}
+  :is(#screen-game,#screen-setup) .panel {overflow:visible;min-width:0;}
+  #screen-setup .left-panel {order:1;}
+  #screen-setup .right-panel {order:3;}
+  #screen-game .left-panel {order:3;}
+  #screen-game .right-panel {order:4;}
+  :is(#screen-game,#screen-setup) .footer-area {order:5;line-height:1.6;}
+  #screen-setup #inventory-list {display:flex!important;flex-direction:row!important;overflow-x:auto;gap:10px;padding:4px 4px 10px;scroll-snap-type:x proximity;}
+  #screen-setup #inventory-list .fleet-choice {min-width:155px;max-width:180px;flex:none;scroll-snap-align:start;padding:10px;}
+  #screen-setup #inventory-list span {font-size:.85rem;}
+  #screen-setup .left-panel h3,#screen-setup .left-panel .control-group {display:none;}
+  :is(#screen-game,#screen-setup) .monitor-bezel {padding:5px;border-width:6px;}
+  :is(#screen-game,#screen-setup) button,#screen-game #manual-tracker button,#screen-game :is(#btn-zoom-in,#btn-zoom-out) {min-height:44px;min-width:44px;font-size:.85rem;}
+  :is(#screen-game,#screen-setup) :is(input,select) {font-size:16px;min-height:44px;}
+  #screen-game .left-panel {display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:14px;}
+  #screen-game .left-panel>h3,#screen-game #manual-tracker,#screen-game #special-actions,#screen-game .left-panel>.control-group:last-child {grid-column:1/-1;}
+  #screen-game .legend-item {font-size:.85rem;}
+  #screen-game .right-panel {display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  #screen-game .right-panel>h3,#screen-game #turn-banner,#screen-game .info-row,#screen-game #dispatch-console {grid-column:1/-1;}
+  #screen-game #dispatch-console {max-height:250px;min-height:100px;font-size:.85rem;}
+  #screen-game #manual-tracker>div>span,#screen-game #manual-tracker>div>div {font-size:.85rem!important;}
+  #screen-game #turn-banner {position:fixed;bottom:env(safe-area-inset-bottom,0px);left:12px;right:12px;z-index:30;margin:0!important;padding:12px!important;box-shadow:0 -3px 14px #0009;}
+  #screen-game {padding-bottom:calc(90px + env(safe-area-inset-bottom,0px))!important;}
+  .paper-notebook {max-width:calc(100vw - 20px);max-height:calc(100dvh - 32px);padding:16px;}
+  .paper-notebook #btn-close-rules {position:sticky;top:0;min-height:44px;}
+  .landing input,.landing select {font-size:16px;}
+}
+@media(max-width:420px) {
+  .landing {padding:0 16px;}
+  .hero h1 {font-size:2.3rem;}
+  .play-card {padding:20px;}
+  .header-tabs {width:100%;display:flex;}
+  .header-tabs button {flex:1;padding:8px!important;}
+  #screen-game .left-panel {grid-template-columns:1fr;}
+  #screen-game .right-panel {grid-template-columns:1fr;}
+  .setup-tools button {flex:1;}
+}
+@media(max-width:1000px) and (orientation:landscape) {
+  :is(#screen-game,#screen-setup) .center-monitor {height:80svh;min-height:260px;}
+}
+
+@media(max-width:1000px) {
+ #screen-setup .center-monitor {height:clamp(280px,48svh,480px);}
+}
+.mobile-map-tools {display:none;}
+@media(max-width:1000px) {
+ .mobile-map-tools {display:flex;order:1;gap:8px;position:sticky;top:0;z-index:20;background:var(--hw-bg);padding:6px 0;}
+ .mobile-map-tools button {flex:1;}
+}
