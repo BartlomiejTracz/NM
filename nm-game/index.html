@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manewry Morskie — gra strategiczna dla dwóch osób</title>
   <link id="theme-style" rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./tactical.css">
 </head>
 <body>
 
@@ -44,7 +45,7 @@
 
     <!-- LEWY PANEL (DOSTĘPNE JEDNOSTKI) -->
     <div class="panel left-panel">
-      <h3>MAGAZYN</h3>
+      <h3>01 / STAN FLOTY</h3>
       <div class="control-group">
         <div class="control-label">JEDNOSTKI W PORCIE:</div>
       </div>
@@ -65,7 +66,7 @@
 
     <!-- PRAWY PANEL (AKCJE I ZARZĄDZANIE) -->
     <div class="panel right-panel">
-      <h3>PRZYGOTOWANIE FLOTY</h3><p class="setup-help">Przeciągnij jednostki z magazynu do swojego portu. Prawy przycisk myszy cofa jednostkę. Rozstaw całą flotę, zanim ją zatwierdzisz.</p>
+      <h3>02 / MOBILIZACJA</h3><p class="setup-help">Przeciągnij jednostki z magazynu do swojego portu. Prawy przycisk myszy cofa jednostkę. Rozstaw całą flotę, zanim ją zatwierdzisz.</p>
 
       <div class="control-group" style="margin-bottom: 15px;">
         <div class="control-label">STAN GOTOWOŚCI</div>
@@ -114,7 +115,7 @@
 
     <!-- LEWY PANEL -->
     <div class="panel left-panel">
-      <h3>KONTROLA</h3>
+      <h3>01 / KONTROLA OGNIA</h3>
 
       <div class="control-group">
         <div class="control-label">ZASIĘG (ZOOM)</div>
@@ -180,7 +181,7 @@
     <!-- PRAWY PANEL -->
     <!-- PRAWY PANEL -->
     <div class="panel right-panel">
-      <h3>LEGENDA</h3>
+      <h3>02 / OBRAZ TAKTYCZNY</h3>
       <div class="legend-item"><div class="legend-icon" style="background: var(--radar-sea);"></div> WODA (OTWARTE MORZE)</div>
       <div class="legend-item"><div class="legend-icon" style="background: rgba(23, 109, 26, 0.3); border: 1px dashed #176d1a;"></div> WODY PORTOWE</div>
       <div class="legend-item"><div class="legend-icon" style="border-color: var(--text-active);">·</div> POLE NEUTRALNE</div>
@@ -205,7 +206,7 @@
         .turn-active { animation: pulse-turn 1.5s infinite; }
       </style>
 
-      <h3 style="margin-top: 30px;">RAPORTY Z FRONTU</h3>
+      <h3 style="margin-top: 30px;">DZIENNIK BOJOWY</h3>
       <div id="dispatch-console" style="flex: 1; overflow-y: auto; margin-top: 10px;"></div>
     </div>
 

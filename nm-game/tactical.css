@@ -1,0 +1,224 @@
+/* Tactical console. Deliberately scoped away from the landing page. */
+:is(#screen-game, #screen-setup) {
+  color-scheme: dark;
+  --hw-bg: #0c100e;
+  --hw-panel: #171c18;
+  --surface-alt: #20281f;
+  --border-dim: #485040;
+  --text-normal: #d3d7bf;
+  --text-dim: #a5af98;
+  --text-active: #bfd48b;
+  --text-glow: #bad98b;
+  --radar-sea: #07150d;
+  --console-metal: #272d25;
+  --console-warning: #d5b976;
+  background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px), radial-gradient(ellipse at top, #262d23, #0c100e 70%);
+  color: var(--text-normal);
+  font-family: 'Consolas', 'Liberation Mono', monospace;
+}
+:root[data-theme=ocean] :is(#screen-game, #screen-setup) {
+  --hw-panel: #161e20;
+  --surface-alt: #202c2d;
+  --border-dim: #465653;
+  --text-normal: #d2dcd3;
+  --text-dim: #a4b7ad;
+  --text-active: #a8cec0;
+  --console-metal: #273130;
+}
+:root[data-theme=paper] :is(#screen-game, #screen-setup) {
+  --hw-panel: #211f18;
+  --surface-alt: #2b291f;
+  --border-dim: #615a43;
+  --text-normal: #e0d8bd;
+  --text-dim: #bcb197;
+  --text-active: #dfc483;
+  --console-metal: #343126;
+}
+:is(#screen-game, #screen-setup) .header-area {
+  border-bottom: 3px double var(--border-dim);
+  position: relative;
+  padding: 0 0 14px;
+}
+:is(#screen-game, #screen-setup) .header-titles h1 {
+  font-family: 'Bahnschrift', 'Arial Narrow', sans-serif;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: .14em;
+  font-size: clamp(1.2rem, 2vw, 1.9rem);
+  text-shadow: 0 2px 1px #000;
+}
+:is(#screen-game, #screen-setup) .header-titles h3 {
+  font-family: inherit;
+  letter-spacing: .19em;
+  color: var(--text-dim);
+  font-size: .65rem;
+}
+:is(#screen-game, #screen-setup) .logo-icon {
+  border-radius: 0;
+  border: 3px double var(--text-dim);
+  color: var(--text-normal);
+  background: #0b100c;
+  font-size: 17px;
+  width: 46px;
+  height: 46px;
+}
+:is(#screen-game, #screen-setup) .panel {
+  border-radius: 2px;
+  border: 1px solid #080b09;
+  outline: 1px solid var(--border-dim);
+  outline-offset: -4px;
+  background: linear-gradient(105deg, #ffffff03, transparent 40%), var(--hw-panel);
+  box-shadow: inset 0 2px 0 #ffffff10, 0 4px 12px #0007;
+  padding: 19px 16px;
+}
+:is(#screen-game, #screen-setup) .panel > h3 {
+  font-family: inherit;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  padding: 9px 8px;
+  margin: -3px -1px 12px;
+  border-bottom: 2px solid var(--border-dim);
+  background: #0003;
+  color: var(--console-warning);
+}
+:is(#screen-game, #screen-setup) :is(button, select, .tab, .control-box, .setup-help) {
+  border-radius: 1px;
+  font-family: inherit;
+}
+:is(#screen-game, #screen-setup) :is(button, .tab) {
+  background: linear-gradient(var(--console-metal), var(--hw-panel));
+  border: 1px solid var(--border-dim);
+  box-shadow: inset 0 1px 0 #ffffff12, 0 2px 2px #0006;
+  text-transform: uppercase;
+  font-size: .74rem;
+  letter-spacing: .04em;
+  color: var(--text-normal);
+}
+:is(#screen-game, #screen-setup) button:hover:not(:disabled) {
+  background: var(--surface-alt);
+  border-color: var(--text-active);
+  color: var(--text-active);
+}
+:is(#screen-game, #screen-setup) button:active:not(:disabled) {
+  box-shadow: inset 0 2px 4px #0009;
+}
+:is(#screen-game, #screen-setup) .control-box {
+  background: #090f0c;
+  border: 1px solid var(--border-dim);
+  box-shadow: inset 0 2px 6px #0008;
+  color: var(--text-glow);
+}
+:is(#screen-game, #screen-setup) select {
+  width: 100%;
+  background: #101813;
+  font-size: .78rem;
+}
+:is(#screen-game, #screen-setup) .control-label {font-size: .7rem; letter-spacing: .06em;}
+:is(#screen-game, #screen-setup) .monitor-bezel {
+  position: relative;
+  padding: 16px;
+  border: 12px solid var(--console-metal);
+  border-radius: 12px;
+  background: #050a07;
+  box-shadow: 0 8px 25px #0009, inset 0 0 0 2px #000, 0 0 0 1px #53604b;
+}
+:is(#screen-game, #screen-setup) .monitor-bezel::before,
+:is(#screen-game, #screen-setup) .monitor-bezel::after {
+  content: '';
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  height: 6px;
+  pointer-events: none;
+  background: radial-gradient(circle at 3px 3px, #060907 1px, #65705b 2px, #101710 3px, transparent 3px), radial-gradient(circle at calc(100% - 3px) 3px, #060907 1px, #65705b 2px, #101710 3px, transparent 3px);
+}
+:is(#screen-game, #screen-setup) .monitor-bezel::before {top: -8px;}
+:is(#screen-game, #screen-setup) .monitor-bezel::after {bottom: -8px;}
+:is(#screen-game, #screen-setup) .crt-screen {
+  border-radius: 5px;
+  background: radial-gradient(ellipse at center, #0e2416, #050e09);
+  box-shadow: inset 0 0 18px #0007;
+  border: 1px solid #31432b;
+}
+:is(#screen-game, #screen-setup) .crt-screen::before {
+  display: block;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, #00000012 3px 4px);
+}
+:is(#screen-game, #screen-setup) .radar-overlay-text {
+  color: #aac98e;
+  font: 9px 'Consolas', monospace;
+  letter-spacing: .1em;
+  opacity: 1;
+  background: #07130be6;
+  padding: 2px 5px;
+}
+:is(#screen-game, #screen-setup) #turn-banner {
+  font-family: inherit;
+  border-radius: 0;
+  border-left-width: 4px!important;
+  font-size: .9rem!important;
+  text-transform: uppercase;
+  background: #090f0c;
+  color: var(--text-dim);
+  box-shadow: inset 0 2px 8px #0009;
+}
+:is(#screen-game, #screen-setup) #turn-banner.turn-active {
+  color: #c3e78b;
+  border-color: #91b65b;
+  background: #192714;
+}
+:is(#screen-game, #screen-setup) #dispatch-console {
+  background: #0a100c;
+  border: 1px solid var(--border-dim);
+  padding: 10px;
+  font: .76rem/1.7 'Consolas', monospace;
+  color: #b6c99e;
+}
+:is(#screen-game, #screen-setup) .footer-area {
+  border-top: 3px double var(--border-dim);
+  font: .65rem 'Consolas', monospace;
+  letter-spacing: .08em;
+  color: var(--text-dim);
+}
+:is(#screen-game, #screen-setup) .status-dot {
+  border: 1px solid #a4c482;
+  box-shadow: 0 0 6px #86af5655;
+  background: #89b65c;
+}
+:is(#screen-game, #screen-setup) .setup-help {
+  background: #0003;
+  border: 0;
+  border-left: 2px solid var(--console-warning);
+  font: .76rem/1.75 'Consolas', monospace;
+}
+:is(#screen-game, #screen-setup) #btn-game-to-menu,
+:is(#screen-game, #screen-setup) #btn-reset-setup {color: #e4a79a!important; border-color: #86594b!important;}
+@media(max-width:1000px) {
+  :is(#screen-game, #screen-setup) .monitor-bezel {border-width: 8px; padding: 10px;}
+}
+@media(max-width:680px) {
+  :is(#screen-game, #screen-setup) .header-titles h1 {font-size: 1.1rem; letter-spacing: .06em;}
+  :is(#screen-game, #screen-setup) .header-titles h3 {letter-spacing: .04em;}
+  :is(#screen-game, #screen-setup) .panel {padding: 15px 12px;}
+}
+/* Keep manual counters inside their panel, even with long unit names. */
+#screen-game #manual-tracker > div {
+  display: grid!important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px;
+}
+#screen-game #manual-tracker > div > span {
+  font-size: .72rem!important;
+  overflow-wrap: anywhere;
+}
+#screen-game #manual-tracker > div > div {
+  gap: 3px!important;
+  font-size: .72rem!important;
+}
+#screen-game #manual-tracker button {
+  min-width: 26px;
+  min-height: 36px;
+  padding: 2px 5px!important;
+}
+#screen-game .legend-item {font-size: .72rem; margin-bottom: 4px;}
+#screen-game .legend-icon {flex-shrink: 0;}
