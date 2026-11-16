@@ -3,52 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manewry Morskie - System Radarowy</title>
+  <title>Manewry Morskie — gra strategiczna dla dwóch osób</title>
   <link id="theme-style" rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-  <!-- MENU STARTOWE -->
-  <div id="screen-menu" class="screen active">
-    <div class="menu-container">
-      <h1>MANEWRY MORSKIE</h1>
-      <h2 style="color: #62d83b; margin-bottom: 20px;">SYSTEM RADAROWY M-1384</h2>
-      
-      <!-- Panel multiplayer -->
-      <div style="border: 1px solid #39B52A; padding: 20px; margin-bottom: 20px;">
-        <button id="btn-create-room" class="btn" style="width: 100%; margin-bottom: 10px;">UTWÓRZ NOWĄ GRĘ (HOST)</button>
-        
-        <div style="display: flex; gap: 10px; margin-top: 15px;">
-          <input type="text" id="input-room-code" placeholder="KOD POKOJU" class="retro-input" style="flex: 1; background: #050705; color: #62d83b; border: 1px solid #39B52A; padding: 5px; text-transform: uppercase;" />
-          <button id="btn-join-room" class="btn" style="width: 50%;">DOŁĄCZ</button>
+  <a class="skip-link" href="#quick-start">Przejdź do zasad</a>
+  <main id="screen-menu" class="screen active">
+    <div class="landing">
+      <header class="landing-nav"><a class="wordmark" href="/">MM<span>Manewry Morskie</span></a><label class="theme-label">Wygląd <select id="menu-theme" aria-label="Motyw strony"><option value="ocean">Ocean</option><option value="paper">Mapa morska</option><option value="radar">Radar</option></select></label></header>
+      <section class="hero">
+        <div class="hero-copy"><p class="eyebrow">Strategia morska · Dla dwóch graczy</p><h1>Obierz kurs.<br><em>Przechytrz rywala.</em></h1><p class="hero-description">Rozstaw flotę, poznaj siłę przeciwnika i przeprowadź desant do jego portu. Każdy ruch ma znaczenie.</p><a class="text-link" href="#quick-start">Pierwsza rozgrywka? Zacznij tutaj ↓</a>
+          <div class="sea-chart" aria-hidden="true"><div class="chart-ring"></div><span class="chart-label">AKWEN / 01</span><div class="ship ship-one"></div><div class="ship ship-two"></div><div class="ship ship-three"></div><span class="chart-coordinate">54° N &nbsp; 18° E</span></div>
         </div>
-      </div>
-
-      <!-- Panel narzędzi głównych -->
-      <div style="display: flex; gap: 10px; width: 100%; max-width: 400px; margin: 20px auto 0;">
-        <button id="btn-menu-fleet-creator" class="btn" style="flex: 1; color: #39b52a; border-color: #39b52a;">KREATOR FLOTY</button>
-        <button id="btn-menu-rules" class="btn" style="flex: 1; color: #fbbf24; border-color: #fbbf24;">NOTATNIK (ZASADY)</button>
-      </div>
-
-      <!-- Wyświetlanie kodu pokoju -->
-      <p id="room-code-display" style="color: #fbbf24; font-weight: bold; font-size: 1.2rem; display: none; text-align: center; margin-top: 15px;"></p>
+        <section class="play-card" aria-labelledby="play-title"><p class="eyebrow">Gotowi do wypłynięcia?</p><h2 id="play-title">Rozpocznij grę</h2><p>Zaproś znajomą osobę. Jedno z was tworzy pokój, drugie wpisuje jego kod.</p><p id="connection-status" role="status" aria-live="polite">Łączenie z serwerem…</p><button id="btn-create-room" class="btn primary">Utwórz pokój</button><div class="divider"><span>lub dołącz do znajomego</span></div><label for="input-room-code">Kod pokoju</label><div class="join-row"><input id="input-room-code" placeholder="np. A1B2C3D4" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="room-hint"><button id="btn-join-room" class="btn">Dołącz</button></div><small id="room-hint">Ośmioznakowy kod otrzymasz od osoby tworzącej pokój.</small><div id="room-code-display" role="status" style="display:none"></div><div class="card-bottom"><span>Chcesz najpierw poćwiczyć rozstawienie?</span><button id="btn-menu-fleet-creator" class="text-button">Otwórz kreator floty</button></div></section>
+      </section>
+      <section id="quick-start" class="quick-start" aria-labelledby="intro-title"><div class="section-heading"><div><p class="eyebrow">Pierwszy raz na pokładzie</p><h2 id="intro-title">Od portu do pierwszego ruchu</h2></div><button id="btn-menu-rules" class="btn">Zasady i jednostki</button></div><div class="steps"><article><span class="step-number">01</span><h3>Połączcie się</h3><p>Utwórz pokój i przekaż kod drugiej osobie. Gdy dołączy, oboje przejdziecie do przygotowania flot.</p></article><article><span class="step-number">02</span><h3>Rozstaw flotę</h3><p>Przeciągnij wszystkie 30 jednostek z magazynu na dozwolone pola swojego portu. Zatwierdź flotę i poczekaj na rywala.</p></article><article><span class="step-number">03</span><h3>Wykonaj manewr</h3><p>W swojej turze kliknij okręt, a potem podświetlone pole, aby go przesunąć. Kliknięcie wrogiej jednostki zleca atak, jeśli jest dozwolony.</p></article></div></section>
+      <section class="rules-intro"><div><p class="eyebrow">Twój cel</p><h2>Dwie drogi<br>do zwycięstwa.</h2><p>Wprowadź swój okręt desantowy do portu przeciwnika <strong>lub zniszcz jego desant</strong>. Chroń własny — nie może atakować.</p></div><div class="rule-questions"><details open><summary>Co mogę zrobić w swojej turze?</summary><p>Wykonujesz jedną akcję: ruch, atak albo operację minową trałowca. Zasięg zależy od jednostki. Ruch może prowadzić także po skosie, ale nie przez inne okręty ani ściany portu.</p></details><details><summary>Dlaczego nie znam okrętów przeciwnika?</summary><p>Typy nierozpoznanych jednostek oraz wrogie miny są ukryte. Obserwuj ruchy i wyniki starć. Nie każdy okręt pokona każdego — tabela jednostek pomoże wybrać atak.</p></details><details><summary>Na co uważać podczas pierwszej gry?</summary><p>Jednakowe jednostki niszczą się wzajemnie. Ukryta mina może zatopić przepływający okręt. Nie pozostawiaj jednostki w strefie neutralnej: po czwartej własnej turze zakończonej w tej strefie zostanie internowana.</p></details><details><summary>Jak przygotować flotę bez przeciwnika?</summary><p>Otwórz kreator floty. Przeciągaj jednostki z magazynu, zamieniaj je miejscami i użyj prawego przycisku myszy, aby cofnąć jednostkę. Gotowy schemat możesz pobrać i wczytać przed kolejną partią. Najwygodniej grać na komputerze z myszą.</p></details></div></section>
+      <footer class="landing-footer"><span>Manewry Morskie</span><span>Rozpoznanie. Decyzja. Manewr.</span></footer>
     </div>
-  </div>
+  </main>
 
   <!-- SETUP (KREATOR FLOTY) -->
   <div id="screen-setup" class="screen">
-    
+
     <!-- GÓRNY PASEK -->
     <div class="header-area">
       <div class="header-logo">
-        <div class="logo-icon">⚓</div>
+        <div class="logo-icon" aria-hidden="true">MM</div>
         <div class="header-titles">
           <h1>KREATOR FLOTY</h1>
           <h3>DOKI ROZSTAWIENIA - BAZA GŁÓWNA</h3>
         </div>
       </div>
       <div class="header-tabs">
-        <button id="btn-setup-rules" class="tab">NOTATNIK</button>
+        <button id="btn-setup-rules" class="tab">ZASADY</button>
         <button id="btn-back-to-menu" class="tab" style="color: #fbbf24; border-color: #fbbf24;">WRÓĆ DO MENU</button>
       </div>
     </div>
@@ -69,15 +58,15 @@
         <div class="crt-screen">
           <div class="radar-overlay-text radar-top-left">KREATOR FLOTY</div>
           <div class="radar-overlay-text radar-bottom-right">TRYB ROZSTAWIENIA</div>
-          <canvas id="setup-canvas" style="display: block; max-width: 100%; max-height: 100%; cursor: crosshair;"></canvas>
+          <canvas aria-label="Port rozstawienia floty. Przeciągnij jednostki z magazynu na planszę." id="setup-canvas" style="display: block; max-width: 100%; max-height: 100%; cursor: crosshair;"></canvas>
         </div>
       </div>
     </div>
 
     <!-- PRAWY PANEL (AKCJE I ZARZĄDZANIE) -->
     <div class="panel right-panel">
-      <h3>DOWÓDZTWO</h3>
-      
+      <h3>PRZYGOTOWANIE FLOTY</h3><p class="setup-help">Przeciągnij jednostki z magazynu do swojego portu. Prawy przycisk myszy cofa jednostkę. Rozstaw całą flotę, zanim ją zatwierdzisz.</p>
+
       <div class="control-group" style="margin-bottom: 15px;">
         <div class="control-label">STAN GOTOWOŚCI</div>
         <button id="btn-save-setup" class="btn" style="width: 100%; padding: 12px 10px; font-size: 1.3rem; background: #051005; color: var(--text-glow); border-color: var(--text-active);">ZATWIERDŹ FLOTĘ</button>
@@ -110,7 +99,7 @@
   <div id="screen-game" class="screen">
     <div class="header-area">
       <div class="header-logo">
-        <div class="logo-icon">❖</div>
+        <div class="logo-icon" aria-hidden="true">MM</div>
         <div class="header-titles">
           <h1>MANEWRY MORSKIE</h1>
           <h3>SYSTEM RADAROWY M-1384</h3>
@@ -118,7 +107,7 @@
       </div>
       <div class="header-tabs">
         <button class="tab active">MAPA</button>
-        <button class="tab" id="btn-toggle-rules">NOTATNIK</button>
+        <button class="tab" id="btn-toggle-rules">ZASADY</button>
         <button class="tab" id="btn-game-to-menu" style="color: #a83232; border-color: #a83232;">ZAMKNIJ SYSTEM</button>
       </div>
     </div>
@@ -126,7 +115,7 @@
     <!-- LEWY PANEL -->
     <div class="panel left-panel">
       <h3>KONTROLA</h3>
-      
+
       <div class="control-group">
         <div class="control-label">ZASIĘG (ZOOM)</div>
         <div class="control-box">
@@ -144,10 +133,7 @@
       <div class="control-group">
         <div class="control-label">TRYB</div>
         <div class="control-box" style="padding: 0 5px;">
-          <select id="mode-selector" style="background: transparent; color: var(--text-glow); border: none; font-family: 'VT323', monospace; font-size: 1.3rem; width: 100%; cursor: pointer; outline: none; padding: 8px 0;">
-            <option value="style.css" style="background: #000; color: #39ff14;">RADAR (ZIELONY)</option>
-            <option value="style2.css" style="background: #000; color: #fff;">SONAR (SZARY)</option>
-          </select>
+          <select id="mode-selector" aria-label="Motyw gry"><option value="ocean">Ocean</option><option value="paper">Mapa morska</option><option value="radar">Radar</option></select>
         </div>
       </div>
 
@@ -183,9 +169,9 @@
           <div class="radar-overlay-text radar-top-right">PORT</div>
           <div class="radar-overlay-text radar-bottom-left">PORT</div>
           <div class="radar-overlay-text radar-bottom-right">ZASIĘG <span id="radar-range-text">20</span></div>
-          
+
           <div id="world-layer" style="position: relative; transform-origin: center; transition: none; display: inline-block;">
-            <canvas id="game-canvas" style="display: block;"></canvas> 
+            <canvas aria-label="Plansza rozgrywki. Wybierz własny okręt, a następnie pole ruchu lub cel ataku." id="game-canvas" style="display: block;"></canvas>
           </div>
         </div>
       </div>
@@ -232,21 +218,21 @@
   <!-- KONIEC EKRANU GRY -->
 
   <!-- ============================================== -->
-  <!-- WYCIĄGNIĘTY NOTATNIK (Teraz jest na wierzchu!) -->
+  <!-- WYCIĄGNIĘTY ZASADY (Teraz jest na wierzchu!) -->
   <!-- ============================================== -->
-  <div id="rules-panel" style="display: none; position: fixed; top: 10%; left: 50%; transform: translateX(-50%); width: 1000px; max-width: 90vw; max-height: 80vh; z-index: 9999; overflow-y: auto;" class="paper-notebook">
+  <dialog id="rules-panel" aria-label="Zasady i tabela jednostek" class="paper-notebook">
     <div style="text-align: center;">
-      <h2>TAJNE: BAZA DANYCH JEDNOSTEK</h2>
+      <h2>Zasady i jednostki</h2>
       <div style="text-align: right; margin-bottom: 20px;">
-        <button id="btn-close-rules" style="color: #2c3e50; border-color: #2c3e50; font-weight: bold;">ZAMKNIJ AKTA [X]</button>
+        <button id="btn-close-rules" style="color: #2c3e50; border-color: #2c3e50; font-weight: bold;">Zamknij zasady</button>
       </div>
     </div>
-    
-    <table class="paper-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 1rem;">
+
+    <p>Wygrywasz, wprowadzając desant do portu przeciwnika lub niszcząc jego desant. W turze wykonujesz jedną akcję. Jednakowe jednostki niszczą się wzajemnie. Kolumna „Zasięg” określa zasięg ruchu; bateria pozostaje nieruchoma i strzela na jedno pole.</p><div class="table-scroll" tabindex="0" role="region" aria-label="Tabela jednostek — przewijaj w poziomie"><table class="paper-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 1rem;">
       <thead>
         <tr>
           <th style="min-width: 180px;">JEDNOSTKA</th>
-          <th>ZAS.</th>
+          <th>Zasięg</th>
           <th>KOGO NISZCZY</th>
           <th>NISZCZONA PRZEZ</th>
           <th>SZTUK</th>
@@ -264,37 +250,21 @@
         <tr><td><img src="/sprites/bateria_nadbrzezna.png" class="sprite-stamp" alt="Bateria"> Bateria nadb.</td><td>-</td><td>Wszystkie jednostki w zasięgu jednego pola oprócz okrętu rakietowego</td><td>Okręt rakietowy</td><td>4</td></tr>
         <tr><td><img src="/sprites/mina.png" class="sprite-stamp" alt="Mina"> Mina</td><td>-</td><td>Zaatakowana bije wszystkie jednostki oprócz trałowca, jeżeli ten wykona akcję „Zdejmuję minę”</td><td>-</td><td>6</td></tr>
       </tbody>
-    </table>
-  </div>
+    </table></div>
+  </dialog>
 
   <script type="module" src="/src/main.ts"></script>
-  
+
   <script>
     // ZEGAR SYSTEMOWY
-    setInterval(() => { 
+    setInterval(() => {
       const clockEl = document.getElementById('clock');
-      if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('pl-PL'); 
+      if (clockEl) clockEl.textContent = new Date().toLocaleTimeString('pl-PL');
     }, 1000);
 
-    // SKRYPT: PRZEŁĄCZNIK TRYBÓW (CSS)
-    document.getElementById('mode-selector')?.addEventListener('change', (e) => {
-      document.getElementById('theme-style').href = `./${e.target.value}`;
-    });
-
-    // SKRYPT: NOTATNIK - dostępny z każdego ekranu
     const rulesPanel = document.getElementById('rules-panel');
-    const toggleRules = () => { 
-      if (rulesPanel) {
-        rulesPanel.style.display = (rulesPanel.style.display === 'none' || rulesPanel.style.display === '') ? 'block' : 'none'; 
-      }
-    };
-    
-    document.getElementById('btn-toggle-rules')?.addEventListener('click', toggleRules);
-    document.getElementById('btn-menu-rules')?.addEventListener('click', toggleRules);
-    document.getElementById('btn-setup-rules')?.addEventListener('click', toggleRules);
-    document.getElementById('btn-close-rules')?.addEventListener('click', () => { 
-      if (rulesPanel) rulesPanel.style.display = 'none'; 
-    });
+    ['btn-toggle-rules', 'btn-menu-rules', 'btn-setup-rules'].forEach(id => document.getElementById(id)?.addEventListener('click', () => rulesPanel.showModal()));
+    document.getElementById('btn-close-rules').addEventListener('click', () => rulesPanel.close());
 
     // SKRYPT: PAN I ZOOM ŚRODKOWYM PRZYCISKIEM MYSZY (MMB)
     let rangeValue = 20;
@@ -307,13 +277,13 @@
     const crtContainer = document.getElementById('crt-container');
     const zoomText = document.getElementById('zoom-val');
     const radarRangeText = document.getElementById('radar-range-text');
-    const canvasEl = document.getElementById('game-canvas'); 
+    const canvasEl = document.getElementById('game-canvas');
 
     function updateTransform() {
       if (zoomText) zoomText.textContent = rangeValue;
       if (radarRangeText) radarRangeText.textContent = rangeValue;
       let currentScale = 20 / rangeValue;
-      
+
       if(worldLayer) {
         worldLayer.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
       }
@@ -321,8 +291,8 @@
 
     if (crtContainer) {
       crtContainer.addEventListener('mousedown', (e) => {
-        if (e.button === 1) { 
-          e.preventDefault(); 
+        if (e.button === 1) {
+          e.preventDefault();
           isDragging = true;
           startX = e.clientX - translateX;
           startY = e.clientY - translateY;
@@ -337,7 +307,7 @@
       translateY = e.clientY - startY;
       updateTransform();
     });
-    
+
     window.addEventListener('mouseup', (e) => {
       if (e.button === 1) {
         isDragging = false;
@@ -345,18 +315,18 @@
       }
     });
 
-    document.getElementById('btn-zoom-in')?.addEventListener('click', () => { 
-      if (rangeValue > 5) { rangeValue -= 5; updateTransform(); } 
+    document.getElementById('btn-zoom-in')?.addEventListener('click', () => {
+      if (rangeValue > 5) { rangeValue -= 5; updateTransform(); }
     });
-    
-    document.getElementById('btn-zoom-out')?.addEventListener('click', () => { 
-      if (rangeValue < 50) { rangeValue += 5; updateTransform(); } 
+
+    document.getElementById('btn-zoom-out')?.addEventListener('click', () => {
+      if (rangeValue < 50) { rangeValue += 5; updateTransform(); }
     });
 
     document.getElementById('btn-reset-view')?.addEventListener('click', () => {
       rangeValue = 20;
-      translateX = 0; 
-      translateY = 0; 
+      translateX = 0;
+      translateY = 0;
       updateTransform();
     });
 
@@ -366,19 +336,19 @@
       { name: 'Niszczyciel', max: 4 }, { name: 'Okręt podwodny', max: 4 }, { name: 'Eskortowiec', max: 4 },
       { name: 'Trałowiec', max: 4 }, { name: 'Okręt desantowy', max: 1 }, { name: 'Bat. nadbrzeżna', max: 4 }
     ];
-    
+
     const trackerContainer = document.getElementById('manual-tracker');
     if (trackerContainer) {
       enemyUnits.forEach((unit, index) => {
         const row = document.createElement('div');
-        row.style.display = 'flex'; 
-        row.style.justifyContent = 'space-between'; 
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
         row.style.alignItems = 'center';
         row.innerHTML = `<span style="font-size: 0.95rem;">${unit.name}</span><div style="display: flex; gap: 5px; align-items: center; font-size: 1.1rem; color: var(--text-active);"><button onclick="updateTracker(${index}, -1)" style="padding: 2px 8px; font-size: 1rem;">-</button><span id="trk-val-${index}" style="width: 25px; text-align: center;">0</span><span style="color: var(--text-dim);">/${unit.max}</span><button onclick="updateTracker(${index}, 1)" style="padding: 2px 8px; font-size: 1rem;">+</button></div>`;
         trackerContainer.appendChild(row);
       });
     }
-    
+
     window.updateTracker = function(index, delta) {
       const valSpan = document.getElementById(`trk-val-${index}`);
       if (valSpan) {

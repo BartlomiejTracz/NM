@@ -8,6 +8,18 @@ import type { Unit, GameView, PlayerId } from './engine/types';
 import { getLegalMoves } from './engine/movement';
 import { INITIAL_INVENTORY, isValidPlacement, isUnitType, validateFleet, encodeFleet, decodeFleet } from './engine/setup';
 
+const themeSelectors = ['menu-theme', 'mode-selector'].map(id => document.getElementById(id) as HTMLSelectElement);
+function applyTheme(theme: string) {
+  const selected = ['ocean', 'paper', 'radar'].includes(theme) ? theme : 'ocean';
+  document.documentElement.dataset.theme = selected;
+  themeSelectors.forEach(select => { select.value = selected; });
+  try { localStorage.setItem('nm_theme', selected); } catch { /* Optional preference. */ }
+}
+let savedTheme = 'ocean';
+try { savedTheme = localStorage.getItem('nm_theme') ?? savedTheme; } catch { /* Storage may be disabled. */ }
+applyTheme(savedTheme);
+themeSelectors.forEach(select => select.addEventListener('change', () => applyTheme(select.value)));
+
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const button = (id: string) => element<HTMLButtonElement>(id);
 const gameCanvas = element<HTMLCanvasElement>('game-canvas');
@@ -63,6 +75,10 @@ function setupLocked() {
   return !localEditor && (!network.connected || !network.synced || network.busy || !!network.state?.ready[role()]);
 }
 function renderControls() {
+  element('connection-status').textContent = !network.connected
+    ? 'Łączenie z serwerem… Pierwsze uruchomienie może potrwać około minuty.'
+    : network.busy ? 'Czekamy na odpowiedź serwera…'
+    : network.session ? 'Pokój aktywny — przekaż kod drugiej osobie.' : 'Połączono z serwerem. Możecie rozpocząć grę.';
   const unavailable = !network.connected || network.busy || !!network.session;
   button('btn-create-room').disabled = unavailable;
   button('btn-join-room').disabled = unavailable;
@@ -80,7 +96,7 @@ function renderControls() {
     else if (!network.connected || !network.synced) text = 'UTRACONO ŁĄCZNOŚĆ — ŁĄCZĘ PONOWNIE…';
     else if (!state.connected.a || !state.connected.b) text = 'OCZEKIWANIE NA POŁĄCZENIE PRZECIWNIKA…';
     else if (network.busy) text = 'OCZEKIWANIE NA POTWIERDZENIE…';
-    else text = network.canAct ? '▶ TWÓJ RUCH ◀' : 'RUCH PRZECIWNIKA…';
+    else text = network.canAct ? 'Twój ruch' : 'Ruch przeciwnika…';
     turnBanner.textContent = text;
     turnBanner.classList.toggle('turn-active', network.canAct);
     const selected = state.units.find(u => u.id === input.getSelectedUnitId());
