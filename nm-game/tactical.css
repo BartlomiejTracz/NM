@@ -222,3 +222,126 @@
 }
 #screen-game .legend-item {font-size: .72rem; margin-bottom: 4px;}
 #screen-game .legend-icon {flex-shrink: 0;}
+/* A single command-room palette across briefing, setup and combat. */
+:root, :root[data-theme=ocean] {
+  color-scheme: dark;
+  --hw-bg: #0c1212;
+  --hw-panel: #161e20;
+  --surface-alt: #202c2d;
+  --border-dim: #465653;
+  --text-normal: #d2dcd3;
+  --text-dim: #a4b7ad;
+  --text-active: #a8cec0;
+  --text-glow: #a8cec0;
+  --accent-ink: #101b16;
+  --hero-glow: #24362e;
+  --chart-line: #354f43;
+}
+:root[data-theme=radar] {
+  --hw-bg: #0c100e;
+  --hw-panel: #171c18;
+  --surface-alt: #20281f;
+  --border-dim: #485040;
+  --text-normal: #d3d7bf;
+  --text-dim: #a5af98;
+  --text-active: #bfd48b;
+  --text-glow: #bad98b;
+  --hero-glow: #283520;
+  --chart-line: #3d4e30;
+}
+:root[data-theme=paper] {
+  color-scheme: dark;
+  --hw-bg: #14140f;
+  --hw-panel: #211f18;
+  --surface-alt: #2b291f;
+  --border-dim: #615a43;
+  --text-normal: #e0d8bd;
+  --text-dim: #bcb197;
+  --text-active: #dfc483;
+  --text-glow: #dfc483;
+  --accent-ink: #211b0c;
+  --hero-glow: #35311f;
+  --chart-line: #504a32;
+}
+#screen-menu {
+  background: repeating-linear-gradient(0deg, #ffffff02 0 1px, transparent 1px 4px), radial-gradient(ellipse at 20% 0, var(--hero-glow), transparent 65%);
+}
+.landing-nav, .landing-footer {border-color: var(--border-dim); border-style: double; border-width: 0 0 3px;}
+.landing-footer {border-width: 3px 0 0;}
+.wordmark {font-family: Consolas, monospace; letter-spacing: .04em;}
+.wordmark span {font-family: 'Bahnschrift', 'Arial Narrow', sans-serif; text-transform: uppercase; letter-spacing: .08em;}
+.hero h1 {font-family: 'Bahnschrift', 'Arial Narrow', sans-serif; letter-spacing: -.025em; text-shadow: 0 2px 1px #000;}
+.eyebrow, .step-number, .theme-label, .landing-footer {font-family: Consolas, monospace;}
+.play-card {
+  border-radius: 2px;
+  outline: 1px solid var(--border-dim);
+  outline-offset: -5px;
+  border: 1px solid #090d0a;
+  background: linear-gradient(110deg, #ffffff04, transparent 50%), var(--hw-panel);
+  box-shadow: inset 0 2px 0 #ffffff10, 0 8px 25px #0006;
+}
+.landing :is(button, input, select, #connection-status, #room-code-display) {border-radius: 1px;}
+.landing :is(button, input, select) {font-family: Consolas, monospace;}
+.landing .primary {text-transform: uppercase; letter-spacing: .06em;}
+.landing input {background: #090f0c;}
+.sea-chart {border-radius: 2px; box-shadow: inset 0 0 20px #0007;}
+.steps article {border-top: 3px double var(--border-dim);}
+.paper-notebook {border-radius: 2px; background: var(--hw-panel);}
+/* Decorative cartography sits beneath all interactive content. No contact markers. */
+#crt-container {isolation: isolate;}
+.radar-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    repeating-radial-gradient(ellipse at 12% 85%, transparent 0 65px, #73945c12 66px 67px, transparent 68px 100px),
+    repeating-linear-gradient(90deg, transparent 0 119px, #819d6810 119px 120px),
+    repeating-linear-gradient(0deg, transparent 0 119px, #819d6810 119px 120px);
+}
+.radar-atmosphere::before {
+  content: '';
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  left: 15%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid #8ca96920;
+  border-radius: 50%;
+  box-shadow: 0 0 0 70px #8ca96906, 0 0 0 71px #8ca96912;
+}
+.radar-sweep {
+  position: absolute;
+  width: 150%;
+  aspect-ratio: 1;
+  left: -25%;
+  top: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg 300deg, #9fc97700 300deg, #9fc97713 357deg, #b4d58c26 359deg, transparent 360deg);
+  transform: translateY(-50%) rotate(0deg);
+  animation: radar-rotation 24s linear infinite;
+  pointer-events: none;
+}
+#world-layer {z-index: 1;}
+.sea-chart .radar-sweep {opacity: .6;}
+@keyframes radar-rotation {
+  to {transform: translateY(-50%) rotate(360deg);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .radar-sweep {animation: none; opacity: .25;}
+}
+.atmosphere-paused .radar-sweep {animation-play-state: paused!important;}
+.radar-atmosphere {opacity: .45;}
+#screen-game :is(#btn-zoom-in, #btn-zoom-out) {
+  min-height: 28px;
+  min-width: 38px;
+  padding: 3px 9px;
+  font-size: 1rem;
+}
+.landing-footer [data-atmosphere-toggle] {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: .7rem;
+}
+.landing-footer {align-items: center; flex-wrap: wrap; gap: 12px;}

@@ -20,6 +20,23 @@ try { savedTheme = localStorage.getItem('nm_theme') ?? savedTheme; } catch { /* 
 applyTheme(savedTheme);
 themeSelectors.forEach(select => select.addEventListener('change', () => applyTheme(select.value)));
 
+const atmosphereButtons = document.querySelectorAll<HTMLButtonElement>('[data-atmosphere-toggle]');
+let atmospherePaused = false;
+try { atmospherePaused = localStorage.getItem('nm_atmosphere_paused') === 'true'; } catch { /* Optional preference. */ }
+function renderAtmosphere() {
+  document.documentElement.classList.toggle('atmosphere-paused', atmospherePaused);
+  atmosphereButtons.forEach(button => {
+    button.setAttribute('aria-pressed', String(atmospherePaused));
+    button.textContent = atmospherePaused ? 'Wznów animację radaru' : 'Wstrzymaj animację radaru';
+  });
+}
+atmosphereButtons.forEach(button => button.addEventListener('click', () => {
+  atmospherePaused = !atmospherePaused;
+  renderAtmosphere();
+  try { localStorage.setItem('nm_atmosphere_paused', String(atmospherePaused)); } catch { /* Optional preference. */ }
+}));
+renderAtmosphere();
+
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const button = (id: string) => element<HTMLButtonElement>(id);
 const gameCanvas = element<HTMLCanvasElement>('game-canvas');
