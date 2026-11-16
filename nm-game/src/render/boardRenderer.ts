@@ -1,4 +1,4 @@
-import type { GameState } from '../engine/types';
+import type { GameView as GameState } from '../engine/types';
 import { isExitTile } from '../engine/board';
 
 export const TILE_SIZE = 40;

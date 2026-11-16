@@ -5,8 +5,14 @@
   "type": "module",
   "main": "server.ts",
   "scripts": {
-    "start": "npx tsx server.ts",
-    "build": "echo 'Brak kompilacji, lecimy w locie'"
+    "start": "tsx server.ts",
+    "build": "tsc --noEmit",
+    "test": "tsc -p tsconfig.tests.json && tsx --test tests/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/express": "^4.17.21",
+    "socket.io-client": "^4.8.3"
   },
   "dependencies": {
     "cors": "^2.8.5",

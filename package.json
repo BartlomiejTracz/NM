@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "setup": "npm --prefix nm-server ci && npm --prefix nm-game ci",
+    "build": "npm --prefix nm-server run build && npm --prefix nm-game run build",
+    "test": "npm --prefix nm-server test"
+  },
   "dependencies": {
     "socket.io-client": "^4.8.3"
   }

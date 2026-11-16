@@ -1,573 +1,256 @@
-// src/main.ts
-
-import { store } from './store/store';
+import { store, emptyState } from './store/store';
 import { BoardRenderer, TILE_SIZE } from './render/boardRenderer';
 import { UnitRenderer } from './render/unitRenderer';
 import { InputHandler } from './render/inputHandler';
-import type { Unit, GameState } from './engine/types';
+import { pointerTile } from './render/coordinates';
+import { NetworkClient } from './network';
+import type { Unit, GameView, PlayerId } from './engine/types';
 import { getLegalMoves } from './engine/movement';
-import { INITIAL_INVENTORY, isValidPlacement } from './engine/setup';
-import { createInitialBoard } from './engine/board';
-// ==========================================
-// 0. SOCKET.IO – POŁĄCZENIE Z SERWEREM
-// ==========================================
-import { io } from 'socket.io-client';
-const serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  ? 'http://localhost:3000' 
-  : 'https://manewry-morskie-serwer.onrender.com/'; 
+import { INITIAL_INVENTORY, isValidPlacement, isUnitType, validateFleet, encodeFleet, decodeFleet } from './engine/setup';
 
-const socket = io(serverUrl);
-(window as any).socket = socket;
-
-// ==========================================
-// 1. POBIERANIE ELEMENTÓW Z DOM
-// ==========================================
-const gameCanvas = document.getElementById('game-canvas') as HTMLCanvasElement;
-const setupCanvas = document.getElementById('setup-canvas') as HTMLCanvasElement;
-const turnBanner = document.getElementById('turn-banner') as HTMLDivElement;
-const roundNumber = document.getElementById('round-number') as HTMLSpanElement;
-const inventoryList = document.getElementById('inventory-list') as HTMLDivElement;
+const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const button = (id: string) => element<HTMLButtonElement>(id);
+const gameCanvas = element<HTMLCanvasElement>('game-canvas');
+const setupCanvas = element<HTMLCanvasElement>('setup-canvas');
 const gameCtx = gameCanvas.getContext('2d')!;
-
-const gameBoardRenderer = new BoardRenderer(gameCanvas);
-const gameUnitRenderer = new UnitRenderer(gameCanvas);
-const gameInputHandler = new InputHandler(gameCanvas);
-const setupBoardRenderer = new BoardRenderer(setupCanvas);
-const setupUnitRenderer = new UnitRenderer(setupCanvas);
-
-const rulesPanel = document.getElementById('rules-panel') as HTMLDivElement;
-const btnToggleRules = document.getElementById('btn-toggle-rules') as HTMLButtonElement;
-const btnCloseRules = document.getElementById('btn-close-rules') as HTMLButtonElement;
-const dispatchConsole = document.getElementById('dispatch-console') as HTMLDivElement;
-const specialActionsPanel = document.getElementById('special-actions') as HTMLDivElement;
-const btnLayMine = document.getElementById('btn-lay-mine') as HTMLButtonElement;
-const btnClearMine = document.getElementById('btn-clear-mine') as HTMLButtonElement;
-const mineCountText = document.getElementById('mine-count') as HTMLSpanElement;
-const btnCreateRoom = document.getElementById('btn-create-room') as HTMLButtonElement;
-const btnJoinRoom = document.getElementById('btn-join-room') as HTMLButtonElement;
-const inputRoomCode = document.getElementById('input-room-code') as HTMLInputElement;
-const roomCodeDisplay = document.getElementById('room-code-display') as HTMLDivElement;
-const btnMenuFleetCreator = document.getElementById('btn-menu-fleet-creator') as HTMLButtonElement;
-const btnBackToMenu = document.getElementById('btn-back-to-menu') as HTMLButtonElement;
-const btnGameToMenu = document.getElementById('btn-game-to-menu') as HTMLButtonElement;
-const btnResetSetup = document.getElementById('btn-reset-setup') as HTMLButtonElement;
-const btnDownloadSetup = document.getElementById('btn-download-setup') as HTMLButtonElement;
-const btnLoadSetup = document.getElementById('btn-load-setup') as HTMLButtonElement;
-const inputLoadSetup = document.getElementById('input-load-setup') as HTMLInputElement;
-const btnResetView = document.getElementById('btn-reset-view') as HTMLButtonElement;
-
-btnLayMine.addEventListener('click', () => { gameInputHandler.actionMode = 'lay_mine'; btnLayMine.textContent = '💣 Wybierz pole na wodzie...'; });
-btnClearMine.addEventListener('click', () => { gameInputHandler.actionMode = 'clear_mine'; btnClearMine.textContent = '✂️ Wybierz minę na planszy...'; });
-btnToggleRules.addEventListener('click', () => rulesPanel.classList.add('open'));
-btnCloseRules.addEventListener('click', () => rulesPanel.classList.remove('open'));
-btnResetView?.addEventListener('click', () => { gameInputHandler.resetView(); });
-
-// ==========================================
-// GLOBALE SIECIOWE (Zabezpieczone)
-// ==========================================
-let myNetworkRole: 'a' | 'b' | null = null;
-let currentRoomId: string | null = null;
-
-// =====================================================================
-// 2. FUNKCJA WCZYTUJĄCA FLOTĘ Z DYSKU (PANCERNA WERSJA)
-// =====================================================================
-function loadDefaultFleetFromStorage(myRole: 'a' | 'b') {
-  const savedFleetJson = localStorage.getItem('nm_default_fleet');
-  if (!savedFleetJson) return; 
-
-  try {
-    const savedUnits = JSON.parse(savedFleetJson);
-    
-    // Ładujemy flotę do kreatora z poprawną korektą pozycjonowania
-    setupUnits = savedUnits.map((unit: any) => {
-      let col = unit.position.col;
-      let row = unit.position.row;
-
-      if (myRole === 'b') {
-        // Odbicie lustrzane dla gracza B (pozostaje bez zmian)
-        col = 19 - col;
-        row = 11 - row;
-      } else {
-        // KOREKTA DLA GRACZA A: cofamy to nieszczęsne przesunięcie o 1 w prawo (-1)
-        col = col - 2; 
-      }
-
-      return {
-        ...unit,
-        id: `${myRole}_${Math.random()}`, 
-        ownerId: myRole, 
-        position: { col, row }
-      };
-    });
-
-    // Aktualizujemy inwentarz, żeby statki zniknęły z panelu bocznego
-    currentInventory = { ...INITIAL_INVENTORY };
-    setupUnits.forEach((u) => {
-      if (currentInventory[u.type] !== undefined) currentInventory[u.type]--;
-    });
-    
-    console.log(`✅ Flota gracza ${myRole} załadowana z korektą pozycji!`);
-  } catch (error) {
-    console.error('❌ Błąd podczas ładowania floty:', error);
-  }
-}
-
-// ==========================================
-// 3. MULTIPLAYER – LOBBY I MAPA
-// ==========================================
-btnCreateRoom?.addEventListener('click', () => {
-  socket.emit('create_room', { board: store.getState().board });
-});
-
-socket.on('room_created', (data: { roomId: string; playerId: 'a' }) => {
-  myNetworkRole = data.playerId;
-  (window as any).myNetworkRole = data.playerId; 
-  currentRoomId = data.roomId; // ZAPISUJEMY ROOM ID!
-  if (roomCodeDisplay) {
-    roomCodeDisplay.style.display = 'block';
-    roomCodeDisplay.innerHTML = `OPERACJA UTWORZONA!<br/>Twój kod to: <span style="font-size: 2rem;">${data.roomId}</span><br/>Czekam na drugiego gracza...`;
-  }
-});
-
-btnJoinRoom?.addEventListener('click', () => {
-  const code = inputRoomCode.value.trim().toUpperCase();
-  if (code) socket.emit('join_room', code);
-  else alert('Wpisz kod operacyjny!');
-});
-
-socket.on('room_joined', (data: { roomId: string; playerId: 'b'; board: any }) => {
-  myNetworkRole = data.playerId;
-  (window as any).myNetworkRole = data.playerId; 
-  currentRoomId = data.roomId; // ZAPISUJEMY ROOM ID!
-  store.setState({ ...store.getState(), board: data.board });
-});
-
-socket.on('game_ready', () => {
-  if (roomCodeDisplay) roomCodeDisplay.style.display = 'none';
-  alert('Połączenie nawiązane! Przechodzimy do rozstawiania floty.');
-  
-  if (myNetworkRole) {
-    loadDefaultFleetFromStorage(myNetworkRole);
-  }
-
-  showScreen('screen-setup');
-  renderSetup(); 
-});
-
-// NIEKTÓRE SERWERY UŻYWAJĄ TEGO ZDARZENIA (Teraz jest bezpieczne i wpisuje roomID!)
-socket.on('game_started', (data: any) => {
-  myNetworkRole = data.role;
-  (window as any).myNetworkRole = data.role;
-  currentRoomId = data.roomId; // <- KLUCZOWA POPRAWKA ZAPOBIEGAJĄCA WYRZUCANIU!
-  
-  store.setState({ ...data.state, roomId: data.roomId });
-  
-  loadDefaultFleetFromStorage(data.role);
-
-  showScreen('screen-setup');
-  renderSetup();
-});
-
-socket.on('error', (msg: string) => { alert(`BŁĄD KOMUNIKACJI: ${msg}`); });
-
-socket.on('sync_action', (action: any) => {
-  const success = store.dispatch(action, store.getState().activePlayerId);
-  if (!success) {
-    console.warn('⚠️ Uwaga: Zsynchronizowana akcja wroga została odrzucona przez lokalny silnik!', action);
-  }
-});
-
-// ==========================================
-// 4. LOGIKA KREATORA FLOTY (SETUP)
-// ==========================================
+const inventoryList = element<HTMLDivElement>('inventory-list');
+const dispatchConsole = element<HTMLDivElement>('dispatch-console');
+const turnBanner = element<HTMLDivElement>('turn-banner');
+const specialActions = element<HTMLDivElement>('special-actions');
+const roomDisplay = element<HTMLDivElement>('room-code-display');
+const fileInput = element<HTMLInputElement>('input-load-setup');
+const saveButton = button('btn-save-setup');
+const serverUrl = import.meta.env.VITE_SERVER_URL || (['localhost', '127.0.0.1'].includes(location.hostname)
+  ? 'http://localhost:3000' : 'https://manewry-morskie-serwer.onrender.com');
+const network = new NetworkClient(serverUrl);
+let localEditor = false;
+let setupGame: string | null = null;
 let setupUnits: Unit[] = [];
-let currentInventory = { ...INITIAL_INVENTORY };
+let inventory = { ...INITIAL_INVENTORY };
+let draggedId: string | null = null;
+const role = (): PlayerId => network.session?.playerId ?? 'a';
+const gameBoard = new BoardRenderer(gameCanvas);
+const setupBoard = new BoardRenderer(setupCanvas);
+const gameUnits = new UnitRenderer(gameCanvas, role);
+const setupRenderer = new UnitRenderer(setupCanvas, role);
+const input = new InputHandler(gameCanvas, () => network.session?.playerId ?? null, () => network.canAct, action => network.action(action));
 
-function showScreen(screenId: 'screen-menu' | 'screen-setup' | 'screen-game') {
-  document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-  document.getElementById(screenId)?.classList.add('active');
-
-  // PANCERNY RESET: Jeśli wchodzimy do kreatora floty, resetujemy przycisk!
-  if (screenId === 'screen-setup') {
-    const btnSave = document.getElementById('btn-save-setup') as HTMLButtonElement;
-    if (btnSave) {
-      btnSave.innerText = 'ZATWIERDŹ FLOTĘ';
-      btnSave.disabled = false;
-      btnSave.style.opacity = '1';
-      btnSave.style.borderColor = 'var(--text-active)';
-      btnSave.style.color = 'var(--text-glow)';
-    }
+function showScreen(id: 'screen-menu' | 'screen-setup' | 'screen-game') {
+  document.querySelectorAll('.screen').forEach(screen => screen.classList.toggle('active', screen.id === id));
+}
+function report(error: unknown) { alert(error instanceof Error ? error.message : 'Nie udało się wykonać operacji.'); }
+function task(operation: () => Promise<unknown>) { void operation().catch(report); }
+function resetMenu() {
+  localEditor = false; setupGame = null; setupUnits = []; draggedId = null;
+  input.reset(); store.setState(emptyState()); showScreen('screen-menu');
+  roomDisplay.style.display = 'none'; dispatchConsole.replaceChildren(); renderControls();
+}
+async function leave() { try { await network.leave(); } finally { resetMenu(); } }
+function recalculateInventory() {
+  inventory = { ...INITIAL_INVENTORY };
+  for (const unit of setupUnits) inventory[unit.type]--;
+}
+function loadDefault() {
+  try {
+    const saved = localStorage.getItem('nm_default_fleet');
+    if (!saved) return;
+    const result = decodeFleet(JSON.parse(saved), store.getState().board, role());
+    if (!result.ok) throw new Error(`Zapisana flota wymaga poprawy: ${result.error}`);
+    setupUnits = result.units;
+  } catch (error) { report(error); }
+}
+function setupLocked() {
+  return !localEditor && (!network.connected || !network.synced || network.busy || !!network.state?.ready[role()]);
+}
+function renderControls() {
+  const unavailable = !network.connected || network.busy || !!network.session;
+  button('btn-create-room').disabled = unavailable;
+  button('btn-join-room').disabled = unavailable;
+  button('btn-menu-fleet-creator').disabled = network.busy;
+  saveButton.disabled = setupLocked();
+  saveButton.textContent = network.state?.ready[role()] && !localEditor ? 'FLOTA ZATWIERDZONA — CZEKAM' : 'ZATWIERDŹ FLOTĘ';
+  button('btn-reset-setup').disabled = setupLocked();
+  button('btn-load-setup').disabled = setupLocked();
+  button('btn-back-to-menu').disabled = network.busy;
+  button('btn-game-to-menu').disabled = network.busy;
+  const state = store.getState();
+  if (state.phase === 'playing' || state.phase === 'finished') {
+    let text: string;
+    if (state.phase === 'finished') text = `ZWYCIĘSTWO GRACZA ${state.winnerId?.toUpperCase()}!`;
+    else if (!network.connected || !network.synced) text = 'UTRACONO ŁĄCZNOŚĆ — ŁĄCZĘ PONOWNIE…';
+    else if (!state.connected.a || !state.connected.b) text = 'OCZEKIWANIE NA POŁĄCZENIE PRZECIWNIKA…';
+    else if (network.busy) text = 'OCZEKIWANIE NA POTWIERDZENIE…';
+    else text = network.canAct ? '▶ TWÓJ RUCH ◀' : 'RUCH PRZECIWNIKA…';
+    turnBanner.textContent = text;
+    turnBanner.classList.toggle('turn-active', network.canAct);
+    const selected = state.units.find(u => u.id === input.getSelectedUnitId());
+    specialActions.style.display = network.canAct && selected?.type === 'tralowiec' ? 'flex' : 'none';
   }
 }
-
-btnMenuFleetCreator?.addEventListener('click', () => {
-  showScreen('screen-setup');
-  store.setState({ ...store.getState(), phase: 'setup', activePlayerId: 'a', units: [], roomId: 'local' });
-  myNetworkRole = 'a';
-  (window as any).myNetworkRole = 'a';
-  currentRoomId = 'local';
-  
-  setupUnits = [];
-  currentInventory = { ...INITIAL_INVENTORY };
-  renderSetup();
-});
-
-btnBackToMenu?.addEventListener('click', () => {
-  showScreen('screen-menu');
-  if (currentRoomId && currentRoomId !== 'local') {
-    socket.emit('leave_room', currentRoomId);
-  }
-  currentRoomId = null;
-  myNetworkRole = null;
-  (window as any).myNetworkRole = null;
-});
-
-btnGameToMenu?.addEventListener('click', () => {
-  store.setState({ roomId: 'local', board: createInitialBoard(), units: [], turn: 1, activePlayerId: 'a', phase: 'lobby', winnerId: null, logs: [] });
-  if (currentRoomId && currentRoomId !== 'local') { 
-    socket.emit('leave_room', currentRoomId); 
-  }
-  currentRoomId = null; 
-  myNetworkRole = null; 
-  (window as any).myNetworkRole = null; 
-  showScreen('screen-menu');
-  dispatchConsole.innerHTML = '<p class="dispatch-msg">> Oczekiwanie na rozkazy...</p>';
-  printedLogsCount = 0;
-});
-
-// NAPRAWA KROPEK W KREATORZE: Wymuszamy, by renderer wiedział, kim jesteśmy
 function renderSetup() {
-  const role = myNetworkRole || (window as any).myNetworkRole || 'a';
-  const mockState: GameState = { 
-    ...store.getState(), 
-    activePlayerId: role, // TO ZABIERA KROPKI WROGA 
-    phase: 'setup', 
-    units: setupUnits, 
-    logs: [] 
-  };
-  setupBoardRenderer.render(mockState);
-  setupUnitRenderer.render(mockState);
-  renderInventory();
-}
-
-function renderInventory() {
-  inventoryList.innerHTML = '';
-  Object.entries(currentInventory).forEach(([type, count]) => {
-    if (type === 'mina') return;
-    if (count > 0) {
-      const row = document.createElement('div');
-      row.style.display = 'flex'; row.style.alignItems = 'center'; row.style.gap = '10px';
-      row.innerHTML = `<span style="min-width: 150px; font-weight: bold; color: var(--text-normal);">${type.toUpperCase().replace('_', ' ')} (x${count})</span>`;
-      const token = document.createElement('div');
-      token.draggable = true; token.style.width = '32px'; token.style.height = '32px';
-      token.style.backgroundColor = 'var(--text-glow)';
-      token.style.webkitMask = `url('./sprites/${type}.png') center/contain no-repeat`; 
-      token.style.mask = `url('./sprites/${type}.png') center/contain no-repeat`;
-      token.style.cursor = 'grab';
-      token.addEventListener('dragstart', (e) => { 
-        e.dataTransfer?.setData('text/plain', type); 
-      });
-      row.appendChild(token); 
-      inventoryList.appendChild(row);
-    }
-  });
-}
-
-setupCanvas.addEventListener('dragover', (e) => e.preventDefault());
-setupCanvas.addEventListener('drop', (e) => {
-  e.preventDefault();
-  const type = e.dataTransfer?.getData('text/plain') as Unit['type'];
-  if (!type || currentInventory[type] <= 0) return;
-  
-  const rect = setupCanvas.getBoundingClientRect();
-  const col = Math.floor((e.clientX - rect.left) / TILE_SIZE); 
-  const row = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-  const role = myNetworkRole || (window as any).myNetworkRole || 'a';
-  const mockState: GameState = { ...store.getState(), activePlayerId: role, units: setupUnits, logs: [] };
-  
-  if (isValidPlacement(mockState, type, { col, row }, role)) {
-    setupUnits.push({ 
-      id: `${role}_${Date.now()}`, 
-      ownerId: role, 
-      type, 
-      position: { col, row }, 
-      alive: true, 
-      revealed: type === 'bateria_nadbrzezna', 
-      turnsInNeutralZone: 0 
+  recalculateInventory();
+  const mock: GameView = { ...store.getState(), phase: 'setup', activePlayerId: role(), units: setupUnits, logs: [] };
+  setupBoard.render(mock); setupRenderer.render(mock);
+  inventoryList.replaceChildren();
+  for (const [name, count] of Object.entries(inventory)) {
+    if (name === 'mina' || count <= 0) continue;
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px';
+    const label = document.createElement('span');
+    label.textContent = `${name.toUpperCase().replaceAll('_', ' ')} (x${count})`;
+    label.style.minWidth = '150px';
+    const token = document.createElement('div');
+    token.draggable = true;
+    token.style.cssText = `width:32px;height:32px;background:var(--text-glow);mask:url('./sprites/${name}.png') center/contain no-repeat;cursor:grab`;
+    token.addEventListener('dragstart', event => {
+      if (setupLocked()) { event.preventDefault(); return; }
+      event.dataTransfer?.setData('text/plain', name);
     });
-    currentInventory[type]--; 
-    renderSetup();
+    row.append(label, token); inventoryList.append(row);
   }
-});
-
-setupCanvas.addEventListener('mousedown', (e) => {
-  const rect = setupCanvas.getBoundingClientRect();
-  const col = Math.floor((e.clientX - rect.left) / TILE_SIZE); 
-  const row = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-  const clickedIndex = setupUnits.findIndex((u) => u.position.col === col && u.position.row === row);
-  
-  if (clickedIndex !== -1) {
-    const unitType = setupUnits[clickedIndex].type;
-    setupUnits.splice(clickedIndex, 1); 
-    currentInventory[unitType]++; 
-    renderSetup();
-  }
-});
-
-/// =====================================================================
-// 5. PANCERNA OBSŁUGA PRZYCISKU "ZATWIERDŹ FLOTĘ"
-// =====================================================================
-const btnSaveSetupOriginal = document.getElementById('btn-save-setup');
-
-if (btnSaveSetupOriginal) {
-  const btnSaveSetup = btnSaveSetupOriginal.cloneNode(true) as HTMLButtonElement;
-  btnSaveSetupOriginal.parentNode?.replaceChild(btnSaveSetup, btnSaveSetupOriginal);
-
-  btnSaveSetup.addEventListener('click', () => {
-    const localRole = myNetworkRole || (window as any).myNetworkRole || 'a';
-    const myUnits = setupUnits.filter(u => u.ownerId === localRole); 
-    
-    // Walidacja kompletu statków
-    if (myUnits.length < 30) {
-      alert(`Rozstaw wszystkie jednostki w dokach! (Obecnie masz: ${myUnits.length}/30)`);
-      return;
-    }
-
-    // ZAPIS DO LOCAL STORAGE (Obracamy Gracza B na A dla bezpiecznego zapisu)
-    const unitsToSave = myUnits.map(u => ({
-      ...u,
-      ownerId: 'a',
-      position: localRole === 'b' 
-        ? { col: 19 - u.position.col, row: 11 - u.position.row } 
-        : { ...u.position }
-    }));
-    localStorage.setItem('nm_default_fleet', JSON.stringify(unitsToSave));
-
-    // KIEROWANIE RUCHU
-    const isMultiplayer = currentRoomId && currentRoomId !== 'local';
-
-    if (!isMultiplayer) {
-      // JESTEŚMY W LOKALNYM KREATORZE
-      alert('Schemat floty został pomyślnie zapisany w pamięci komputera!');
-      document.getElementById('screen-setup')?.classList.remove('active');
-      document.getElementById('screen-menu')?.classList.add('active');
-      
-    } else {
-      // JESTEŚMY W GRZE SIECIOWEJ
-      btnSaveSetup.innerText = 'OCZEKIWANIE NA WROGA...';
-      btnSaveSetup.disabled = true;
-      btnSaveSetup.style.opacity = '0.5';
-      btnSaveSetup.style.borderColor = '#fbbf24';
-      btnSaveSetup.style.color = '#fbbf24';
-
-      // WYSYŁAMY DOKŁADNIE TO, CZEGO OCZEKUJE SERWER W server.ts (submit_fleet)
-      if ((window as any).socket) {
-        (window as any).socket.emit('submit_fleet', { 
-          roomId: currentRoomId, 
-          role: localRole,
-          fleet: myUnits 
-        });
-      }
-    }
-  });
+  renderControls();
 }
 
-btnResetSetup?.addEventListener('click', () => {
-  setupUnits = []; 
-  currentInventory = { ...INITIAL_INVENTORY }; 
+network.onState = state => {
+  localEditor = false;
+  const previous = store.getState();
+  if (state.gameId !== previous.gameId || state.revision !== previous.revision) input.reset();
+  store.setState(state);
+  if (state.phase === 'lobby') {
+    showScreen('screen-menu');
+    roomDisplay.style.display = 'block';
+    const text = document.createElement('p'); text.textContent = `Kod pokoju: ${state.roomId}. Oczekiwanie na drugiego gracza.`;
+    const exit = document.createElement('button'); exit.textContent = 'OPUŚĆ POKÓJ'; exit.addEventListener('click', () => task(leave));
+    roomDisplay.replaceChildren(text, exit);
+  } else if (state.phase === 'setup') {
+    roomDisplay.style.display = 'none';
+    if (setupGame !== state.gameId) { setupGame = state.gameId; setupUnits = []; loadDefault(); }
+    if (state.ready[role()]) {
+      setupUnits = state.units.filter((u): u is Unit => u.ownerId === role() && u.type !== 'unknown').map(u => ({ ...u, position: { ...u.position } }));
+    }
+    showScreen('screen-setup'); renderSetup();
+  } else { roomDisplay.style.display = 'none'; showScreen('screen-game'); }
+};
+network.onStatus = renderControls;
+network.onEnded = reason => { resetMenu(); alert(reason); };
+
+button('btn-create-room').addEventListener('click', () => task(() => network.create()));
+button('btn-join-room').addEventListener('click', () => {
+  const code = element<HTMLInputElement>('input-room-code').value.trim().toUpperCase();
+  if (!/^[A-F0-9]{8}$/.test(code)) { alert('Wpisz ośmioznakowy kod pokoju.'); return; }
+  task(() => network.join(code));
+});
+button('btn-menu-fleet-creator').addEventListener('click', () => task(async () => {
+  if (network.session) await leave();
+  localEditor = true; setupGame = 'local'; setupUnits = [];
+  store.setState({ ...emptyState(), phase: 'setup' }); loadDefault(); showScreen('screen-setup'); renderSetup();
+}));
+button('btn-back-to-menu').addEventListener('click', () => task(leave));
+button('btn-game-to-menu').addEventListener('click', () => task(leave));
+button('btn-reset-setup').addEventListener('click', () => { if (!setupLocked()) { setupUnits = []; renderSetup(); } });
+button('btn-lay-mine').addEventListener('click', () => { if (network.canAct) { input.actionMode = 'lay_mine'; button('btn-lay-mine').textContent = 'WYBIERZ POLE'; } });
+button('btn-clear-mine').addEventListener('click', () => { if (network.canAct) { input.actionMode = 'clear_mine'; button('btn-clear-mine').textContent = 'WYBIERZ POLE DO PRZESZUKANIA'; } });
+
+setupCanvas.addEventListener('dragover', event => event.preventDefault());
+setupCanvas.addEventListener('drop', event => {
+  event.preventDefault(); if (setupLocked()) return;
+  const type = event.dataTransfer?.getData('text/plain');
+  const pos = pointerTile(setupCanvas, event);
+  if (!isUnitType(type) || type === 'mina' || inventory[type] <= 0 || !pos) return;
+  if (!isValidPlacement({ board: store.getState().board, units: setupUnits }, type, pos, role())) return;
+  setupUnits.push({ id: crypto.randomUUID(), ownerId: role(), type, position: pos, alive: true, revealed: type === 'bateria_nadbrzezna', turnsInNeutralZone: 0 });
+  renderSetup();
+});
+setupCanvas.addEventListener('pointerdown', event => {
+  if (event.button !== 0 || setupLocked()) return;
+  const pos = pointerTile(setupCanvas, event);
+  const unit = pos && setupUnits.find(u => u.position.col === pos.col && u.position.row === pos.row);
+  if (unit) { draggedId = unit.id; setupCanvas.setPointerCapture(event.pointerId); }
+});
+setupCanvas.addEventListener('pointerup', event => {
+  const id = draggedId; draggedId = null;
+  if (setupCanvas.hasPointerCapture(event.pointerId)) setupCanvas.releasePointerCapture(event.pointerId);
+  if (!id || setupLocked()) return;
+  const pos = pointerTile(setupCanvas, event);
+  const unit = setupUnits.find(u => u.id === id);
+  if (!unit || !pos) return;
+  const target = setupUnits.find(u => u.id !== id && u.position.col === pos.col && u.position.row === pos.row);
+  const remaining = setupUnits.filter(u => u.id !== id && u.id !== target?.id);
+  const state = { board: store.getState().board, units: remaining };
+  if (!isValidPlacement(state, unit.type, pos, role()) || target && !isValidPlacement(state, target.type, unit.position, role())) return;
+  const origin = { ...unit.position };
+  unit.position = pos;
+  if (target) target.position = origin;
+  renderSetup();
+});
+setupCanvas.addEventListener('pointercancel', () => { draggedId = null; });
+setupCanvas.addEventListener('contextmenu', event => {
+  event.preventDefault(); if (setupLocked()) return;
+  const pos = pointerTile(setupCanvas, event);
+  if (!pos) return;
+  setupUnits = setupUnits.filter(u => u.position.col !== pos.col || u.position.row !== pos.row);
   renderSetup();
 });
 
-btnDownloadSetup?.addEventListener('click', () => {
-  const isFleetComplete = Object.entries(currentInventory).every(([type, count]) => type === 'mina' || count === 0);
-  if (!isFleetComplete) { 
-    alert('Musisz rozstawić wszystkie okręty i baterie nadbrzeżne przed pobraniem pliku!'); 
-    return; 
-  }
-  
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(setupUnits, null, 2));
-  const downloadAnchorNode = document.createElement('a'); 
-  downloadAnchorNode.setAttribute('href', dataStr); 
-  downloadAnchorNode.setAttribute('download', `flota_${new Date().getTime()}.json`);
-  document.body.appendChild(downloadAnchorNode); 
-  downloadAnchorNode.click(); 
-  downloadAnchorNode.remove();
+saveButton.addEventListener('click', () => task(async () => {
+  if (setupLocked()) return;
+  const result = validateFleet(setupUnits, store.getState().board, role());
+  if (!result.ok) throw new Error(result.error);
+  const saved = encodeFleet(result.units, store.getState().board, role());
+  try { localStorage.setItem('nm_default_fleet', JSON.stringify(saved)); }
+  catch { alert('Przeglądarka nie pozwala zapisać floty. Możesz pobrać schemat do pliku.'); }
+  if (localEditor) { resetMenu(); alert('Flota została zatwierdzona.'); }
+  else await network.submitFleet(result.units);
+}));
+button('btn-download-setup').addEventListener('click', () => {
+  try {
+    const data = encodeFleet(setupUnits, store.getState().board, role());
+    const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'flota-v2.json'; anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { report(error); }
 });
+button('btn-load-setup').addEventListener('click', () => { if (!setupLocked()) fileInput.click(); });
+fileInput.addEventListener('change', () => task(async () => {
+  const file = fileInput.files?.[0]; fileInput.value = '';
+  if (!file || setupLocked()) return;
+  if (file.size > 32_768) throw new Error('Plik floty jest zbyt duży.');
+  const gameId = setupGame;
+  const data: unknown = JSON.parse(await file.text());
+  if (gameId !== setupGame || setupLocked()) return;
+  const result = decodeFleet(data, store.getState().board, role());
+  if (!result.ok) throw new Error(result.error);
+  setupUnits = result.units; renderSetup();
+}));
 
-btnLoadSetup?.addEventListener('click', () => { 
-  inputLoadSetup.click(); 
-});
-
-inputLoadSetup?.addEventListener('change', (event) => {
-  const file = (event.target as HTMLInputElement).files?.[0];
-  if (!file) return;
-  
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const loadedUnits = JSON.parse(e.target?.result as string);
-      if (Array.isArray(loadedUnits)) {
-        const role = myNetworkRole || (window as any).myNetworkRole || 'a';
-        const board = store.getState().board;
-        const maxCol = board.columns - 1;
-        const maxRow = board.rows - 1;
-        
-        setupUnits = loadedUnits.map(u => {
-          let c = u.position.col;
-          let r = u.position.row;
-          
-          if (role === 'b' && c < board.columns / 2) {
-            c = maxCol - c; 
-            r = maxRow - r; 
-          } else if (role === 'a' && c >= board.columns / 2) {
-            c = maxCol - c;
-            r = maxRow - r;
-          }
-          
-          return { ...u, ownerId: role, id: `${role}_${Math.random()}`, position: { ...u.position, col: c, row: r } };
-        });
-
-        currentInventory = { ...INITIAL_INVENTORY };
-        setupUnits.forEach((u) => { 
-          if (currentInventory[u.type] !== undefined) currentInventory[u.type]--; 
-        });
-        renderSetup();
-        alert('Flota pomyślnie wczytana i zaadaptowana do Twojej strony!');
-      } else { 
-        throw new Error('Nieprawidłowy format pliku.'); 
-      }
-    } catch (error) { 
-      alert('Błąd podczas wczytywania! Upewnij się, że to poprawny plik .json z flotą.'); 
-    }
-    inputLoadSetup.value = '';
-  };
-  reader.readAsText(file);
-});
-
-// ==========================================
-// 6. OBSŁUGA STARTU GRY Z SERWERA (PO ZATWIERDZENIU PRZEZ OBU)
-// ==========================================
-socket.on('game_start', (combinedUnits: Unit[]) => {
-  alert('Przeciwnik zameldował gotowość! Zaczynamy bitwę!');
-  store.setState({
-    roomId: currentRoomId || 'local',
-    board: store.getState().board, 
-    units: combinedUnits, // <- Wrzucamy statki obu graczy prosto na planszę
-    turn: 1,
-    activePlayerId: 'a',
-    phase: 'playing',
-    winnerId: null,
-    logs: ['Wojna wypowiedziana. Obydwie floty weszły do sektora!'],
-  });
-  showScreen('screen-game');
-});
-
-// ==========================================
-// 8. RENDEROWANIE I PĘTLA GRY
-// ==========================================
-let printedLogsCount = 0;
-
-store.subscribe((state: GameState) => {
+store.subscribe(state => {
   if (state.phase !== 'playing' && state.phase !== 'finished') return;
-  
-  const selectedId = gameInputHandler.getSelectedUnitId();
-  if (selectedId && state.phase === 'playing') {
-    const selectedUnit = state.units.find((u) => u.id === selectedId);
-    if (selectedUnit && selectedUnit.type === 'tralowiec') {
-      specialActionsPanel.style.display = 'flex';
-      btnLayMine.textContent = 'POSTAW MINĘ'; 
-      btnClearMine.textContent = 'ROZBROJ MINĘ';
-      const laidMines = state.units.filter((u) => u.ownerId === state.activePlayerId && u.type === 'mina' && u.alive).length;
-      mineCountText.textContent = `Miny: ${6 - laidMines}/6`;
-    } else { 
-      specialActionsPanel.style.display = 'none'; 
-    }
-  } else { 
-    specialActionsPanel.style.display = 'none'; 
-  }
-
-  if (state.logs && state.logs.length > printedLogsCount) {
-    for (let i = printedLogsCount; i < state.logs.length; i++) {
-      let msgText = state.logs[i];
-      const myRole = myNetworkRole || (window as any).myNetworkRole || 'a';
-      const enemyRoleText = myRole === 'a' ? '[Gracz B]' : '[Gracz A]';
-
-      if (msgText.includes(enemyRoleText) && msgText.includes('przemieścił')) {
-        const regex = new RegExp(`(\\[Gracz [AB]\\])\\s+(.*?)\\s+przemieścił`, 'i');
-        msgText = msgText.replace(regex, '$1 NIEZNANY OBIEKT przemieścił');
-      }
-
-      const msg = document.createElement('div'); 
-      msg.className = 'dispatch-msg'; 
-      msg.textContent = `> ${msgText}`;
-      dispatchConsole.appendChild(msg); 
-      dispatchConsole.scrollTop = dispatchConsole.scrollHeight;
-    }
-    printedLogsCount = state.logs.length;
-  }
-
-  const currentRound = Math.ceil(state.turn / 2);
-  const myRole = myNetworkRole || (window as any).myNetworkRole;
-  
-  if (roundNumber) roundNumber.textContent = currentRound.toString();
-
-  if (turnBanner) {
-    if (state.phase === 'finished') {
-      turnBanner.textContent = `ZWYCIĘSTWO GRACZA ${state.winnerId?.toUpperCase()}!`;
-      turnBanner.style.backgroundColor = 'rgba(251, 191, 36, 0.15)';
-      turnBanner.style.color = '#fbbf24';
-      turnBanner.style.borderColor = '#fbbf24';
-      turnBanner.className = ''; // Wyłącza pulsowanie
-    } else {
-      const isMyTurn = myRole === state.activePlayerId;
-      
-      if (isMyTurn) {
-        // ZIELONY, PULSUJĄCY ALARM - TWÓJ RUCH
-        turnBanner.textContent = '▶ TWÓJ RUCH ◀';
-        turnBanner.style.backgroundColor = 'rgba(98, 216, 59, 0.15)';
-        turnBanner.style.color = '#62d83b';
-        turnBanner.style.borderColor = '#62d83b';
-        turnBanner.className = 'turn-active'; 
-      } else {
-        // CZERWONY, ZIMNY KOMUNIKAT - RUCH WROGA
-        turnBanner.textContent = 'RUCH WROGA...';
-        turnBanner.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-        turnBanner.style.color = '#ef4444';
-        turnBanner.style.borderColor = '#ef4444';
-        turnBanner.className = ''; 
-      }
-    }
-  }
+  element<HTMLSpanElement>('round-number').textContent = String(Math.ceil(state.turn / 2));
+  element<HTMLSpanElement>('mine-count').textContent = `Miny: ${6 - state.units.filter(u => u.alive && u.ownerId === role() && u.type === 'mina').length}/6`;
+  button('btn-lay-mine').textContent = 'POSTAW MINĘ'; button('btn-clear-mine').textContent = 'ROZBROJ MINĘ';
+  dispatchConsole.replaceChildren(...state.logs.map(text => { const line = document.createElement('div'); line.className = 'dispatch-msg'; line.textContent = `> ${text}`; return line; }));
+  dispatchConsole.scrollTop = dispatchConsole.scrollHeight;
+  renderControls();
 });
-
+let moveCache = { revision: -1, gameId: '', selected: '', moves: [] as { row: number; col: number }[] };
 function renderLoop() {
   const state = store.getState();
   if (state.phase === 'playing' || state.phase === 'finished') {
-    gameBoardRenderer.render(state);
-    const selectedId = gameInputHandler.getSelectedUnitId();
-    if (selectedId && state.phase === 'playing') {
-      const selectedUnit = state.units.find((u) => u.id === selectedId);
-      if (selectedUnit) {
-        if (gameInputHandler.actionMode === 'default') {
-          const legalMoves = getLegalMoves(state, selectedId);
-          gameCtx.fillStyle = 'rgba(98, 216, 59, 0.2)';
-          legalMoves.forEach((pos) => { 
-            gameCtx.fillRect(pos.col * TILE_SIZE, pos.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); 
-          });
-        }
-        gameCtx.strokeStyle = '#62d83b'; 
-        gameCtx.lineWidth = 2;
-        gameCtx.strokeRect(
-          selectedUnit.position.col * TILE_SIZE, 
-          selectedUnit.position.row * TILE_SIZE, 
-          TILE_SIZE, 
-          TILE_SIZE
-        );
+    gameBoard.render(state);
+    const id = input.getSelectedUnitId();
+    if (id && network.canAct) {
+      if (moveCache.revision !== state.revision || moveCache.gameId !== state.gameId || moveCache.selected !== id) {
+        moveCache = { revision: state.revision, gameId: state.gameId, selected: id, moves: getLegalMoves(state, id) };
       }
+      if (input.actionMode === 'default') {
+        gameCtx.fillStyle = 'rgba(98,216,59,0.2)';
+        for (const pos of moveCache.moves) gameCtx.fillRect(pos.col * TILE_SIZE, pos.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+      }
+      const unit = state.units.find(u => u.id === id);
+      if (unit) { gameCtx.strokeStyle = '#62d83b'; gameCtx.strokeRect(unit.position.col * TILE_SIZE, unit.position.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
     }
-    gameUnitRenderer.render(state);
+    gameUnits.render(state);
   }
   requestAnimationFrame(renderLoop);
 }
-
-requestAnimationFrame(renderLoop);
+renderControls(); network.socket.connect(); requestAnimationFrame(renderLoop);

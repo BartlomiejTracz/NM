@@ -1,4 +1,4 @@
-import type { GameState } from '../engine/types';
+import type { GameView as GameState, PlayerId } from '../engine/types';
 import { TILE_SIZE } from './boardRenderer';
 
 const sprites: Record<string, HTMLCanvasElement> = {};
@@ -40,14 +40,15 @@ spriteNames.forEach(name => {
 
 export class UnitRenderer {
   private ctx: CanvasRenderingContext2D;
-  constructor(canvas: HTMLCanvasElement) { this.ctx = canvas.getContext('2d')!; }
+  private getPlayer: () => PlayerId;
+  constructor(canvas: HTMLCanvasElement, getPlayer: () => PlayerId) { this.ctx = canvas.getContext('2d')!; this.getPlayer = getPlayer; }
 
   public render(state: GameState) {
     if (!state || !state.units) return;
     const time = Date.now();
     const pulse = (Math.sin(time / 318.3) + 1) / 2; 
 
-    const localPlayer = (window as any).myNetworkRole || state.activePlayerId;
+    const localPlayer = this.getPlayer();
 
     state.units.forEach(unit => {
       if (!unit.position || unit.position.col < 0) return;
