@@ -22,6 +22,7 @@ export function installBoardViewport(canvas: HTMLCanvasElement, viewport: HTMLEl
   let origin = {x:0,y:0};
   viewport.addEventListener('pointerdown', event => {
     if (event.pointerType === 'mouse' && event.button !== 1) return;
+    if (event.pointerType === 'mouse') event.preventDefault();
     if (!pointers.size) { moved = false; origin = {x:event.clientX,y:event.clientY}; }
     pointers.set(event.pointerId,{x:event.clientX,y:event.clientY});
     if (pointers.size > 1) moved = true;

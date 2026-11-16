@@ -141,6 +141,7 @@ function renderSetup() {
   element('setup-selection').textContent = selected ? 'Wybrano okręt. Dotknij nowego pola lub cofnij do magazynu.'
     : selectedPlacement ? `Wybrano: ${selectedPlacement.replaceAll('_', ' ')}. Dotknij wolnego pola portu.` : 'Wybierz jednostkę z magazynu, a potem dotknij pola portu.';
   button('btn-remove-unit').disabled = setupLocked() || !selected;
+  const inventoryScroll = inventoryList.scrollLeft;
   inventoryList.replaceChildren();
   for (const [name, count] of Object.entries(inventory)) {
     if (name === 'mina' || count <= 0) continue;
@@ -161,6 +162,7 @@ function renderSetup() {
     });
     row.append(label, token); inventoryList.append(row);
   }
+  inventoryList.scrollLeft = inventoryScroll;
   renderControls();
 }
 
