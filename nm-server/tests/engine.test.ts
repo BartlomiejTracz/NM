@@ -81,14 +81,15 @@ test('neutral counter counts own turns and interns on fourth, retaining timestam
   assert.equal(result.units.find(u => u.id === 'waiting')!.destroyedAtTurn, 1);
   assert.equal(result.units.find(u => u.id === 'b-waiting')!.turnsInNeutralZone, 0);
 });
-test('hidden mines do not change movement hints; actual contact destroys both', () => {
+test('mine contacts block movement consistently and an attack destroys both', () => {
   const s = state([unit('ship', 'a', 'pancernik', 5, 0), unit('secret-mine', 'b', 'mina', 6, 0)]);
   const v = playerView(s, 'a', { a: true, b: true }, { a: true, b: true });
   assert.deepEqual(getLegalMoves(s, 'ship'), getLegalMoves(v, 'ship'));
-  const result = applyMove(s, move('ship', 7, 0), 'a');
+  assert.equal(getLegalMoves(v, 'ship').some(p => p.col === 6 && p.row === 0), false);
+  const result = applyMove(s, { kind: 'attack', unitId: 'ship', targetUnitId: 'secret-mine' }, 'a');
   assert.equal(result.error, undefined);
   assert.equal(result.newState.units.find(u => u.id === 'ship')!.alive, false);
-  assert.deepEqual(result.newState.units.find(u => u.id === 'ship')!.position, { col: 6, row: 0 });
+  assert.equal(v.units.find(u => u.id === 'secret-mine')!.type, 'unknown');
   assert.equal(result.newState.units.find(u => u.id === 'secret-mine')!.alive, false);
 });
 test('clearing unknown and empty squares both consumes one turn', () => {
@@ -100,13 +101,14 @@ test('clearing unknown and empty squares both consumes one turn', () => {
     assert.equal(r.newState.units.find(u => u.id === 'mine')!.alive, col !== 6);
   }
 });
-test('mine operation does not expose coordinates or source ID in opponent view', () => {
+test('mine contact exposes its position but not its type or laying unit in logs', () => {
   const s = state([unit('sweeper-secret', 'a', 'tralowiec', 5, 0)]);
   const result = applyMove(s, { kind: 'lay_mine', unitId: 'sweeper-secret', at: { col: 6, row: 0 } }, 'a').newState;
   const view = playerView(result, 'b', { a: true, b: true }, { a: true, b: true });
   assert.equal(view.units.find(u => u.id === 'sweeper-secret')!.type, 'unknown');
   assert.equal(view.units.some(u => u.type === 'mina'), false);
-  assert.equal(JSON.stringify(view).includes('mine_a_1'), false);
+  assert.deepEqual(view.units.find(u => u.id === 'mine_a_1')?.position, {col:6,row:0});
+  assert.equal(view.units.find(u => u.id === 'mine_a_1')?.type, 'unknown');
   assert.ok(view.logs.every(log => !log.includes('6') && !log.includes('sweeper-secret')));
 });
 test('six active mines limit is enforced; pure reducer is deterministic', () => {
@@ -160,4 +162,14 @@ test('scaled canvas maps the clicked pixel to the correct tile and rejects bound
   assert.deepEqual(pointerTile(canvas, { clientX: 60, clientY: 70 }), { col: 2, row: 2 });
   assert.equal(pointerTile(canvas, { clientX: 370, clientY: 20 }), null);
   assert.equal(pointerTile(canvas, { clientX: 0, clientY: 20 }), null);
+});
+
+
+test('sweeping a non-mine contact consumes the turn without harming either unit', () => {
+  const s = state([unit('sweeper', 'a', 'tralowiec', 5, 0), unit('contact', 'b', 'pancernik', 6, 0)]);
+  const r = applyMove(s, {kind:'clear_mine',unitId:'sweeper',at:{col:6,row:0}}, 'a');
+  assert.equal(r.error, undefined);
+  assert.equal(r.newState.turn, 2);
+  assert.ok(r.newState.units.every(u => u.alive));
+  assert.equal(r.newState.units.find(u => u.id === 'contact')!.revealed, false);
 });

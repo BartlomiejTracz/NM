@@ -81,11 +81,7 @@ export class UnitRenderer {
       }
 
       // === LOGIKA WIDOCZNOŚCI I KROPEK ===
-      let isVisible = unit.revealed || unit.ownerId === localPlayer || state.phase === 'finished';
-      
-      if (unit.type === 'mina' && isEnemy && state.phase !== 'finished') {
-        isVisible = false;
-      }
+      const isVisible = unit.type !== 'mina' && (unit.revealed || unit.ownerId === localPlayer || state.phase === 'finished');
 
       // Jeśli jednostka jest wroga i ukryta, wyświetlamy niezidentyfikowaną ZIELONĄ kropkę. 
       // Wróg ujawnia swój kolor dopiero, gdy zostanie trafiony/wykryty!

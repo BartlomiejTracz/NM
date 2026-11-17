@@ -23,15 +23,15 @@ export function applyMove(state: GameState, input: unknown, playerId: PlayerId):
   } else if (action.kind === 'attack') {
     const target = state.units.find(u => u.id === action.targetUnitId);
     if (original.type === 'okret_desantowy' || original.type === 'mina') return fail('Ta jednostka nie może atakować.');
-    // Mines are never selectable by their secret ID; use a movement or clearing intent.
-    if (!target?.alive || target.ownerId === playerId || target.type === 'mina') return fail('Niedozwolony cel.');
+    // A mine is a visible unidentified contact and may be attacked.
+    if (!target?.alive || target.ownerId === playerId) return fail('Niedozwolony cel.');
     if (distance(original.position, target.position) > UNIT_RULES[original.type].range) return fail('Cel poza zasięgiem.');
     if (getTile(state.board, original.position) === 'neutral' || getTile(state.board, target.position) === 'neutral') return fail('Zakaz walki w strefie neutralnej.');
   } else {
     const tile = getTile(state.board, action.at);
     if (original.type !== 'tralowiec' || !tile || tile === 'neutral' || tile === 'island' || tile.endsWith('_wall') || getTile(state.board, original.position) === 'neutral' || distance(original.position, action.at) > 2 || distance(original.position, action.at) === 0) return fail('Niedozwolona operacja minowa.');
     const occupant = state.units.find(u => u.alive && samePosition(u.position, action.at));
-    if (occupant && !(occupant.type === 'mina' && occupant.ownerId !== playerId)) return fail('Pole jest zajęte.');
+    if (occupant && (action.kind === 'lay_mine' || occupant.ownerId === playerId)) return fail('Pole jest zajęte.');
     if (action.kind === 'lay_mine' && state.units.filter(u => u.alive && u.ownerId === playerId && u.type === 'mina').length >= 6) return fail('Brak min w magazynie.');
   }
 
@@ -60,7 +60,7 @@ export function applyMove(state: GameState, input: unknown, playerId: PlayerId):
     case 'lay_mine': {
       const mine = next.units.find(u => u.alive && samePosition(u.position, action.at));
       if (!mine) next.units.push({ id: `mine_${playerId}_${state.turn}`, ownerId: playerId, type: 'mina', position: { ...action.at }, alive: true, revealed: false, turnsInNeutralZone: 0 });
-      // An occupied hidden mine also consumes the action, without a free probing oracle.
+      // Keep the operation log generic; the contact is visible in player snapshots.
       next.logs.push(`[Gracz ${playerId.toUpperCase()}] Wykonano operację minową.`);
       break;
     }

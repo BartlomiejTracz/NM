@@ -7,8 +7,7 @@ const key = (p: Position) => `${p.row},${p.col}`;
 export const samePosition = (a: Position, b: Position) => a.row === b.row && a.col === b.col;
 export const distance = (a: Position, b: Position) => Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col));
 
-// Paths are chosen without knowledge of hidden mines. The server resolves contact
-// with the first mine on that path, so a mine can neither leak nor be skipped.
+// All visible contacts block movement, independent of their undisclosed type.
 export function getMovementPaths(state: GameState | GameView, unitId: string): Map<string, Position[]> {
   const result = new Map<string, Position[]>();
   const unit = state.units.find(u => u.id === unitId);
@@ -25,7 +24,7 @@ export function getMovementPaths(state: GameState | GameView, unitId: string): M
       const tile = getTile(state.board, next);
       if (visited.has(key(next)) || !tile || tile === 'island' || tile.endsWith('_wall') || !canCrossWall(pos, next, state.board)) continue;
       if (tile === `port_${unit.ownerId === 'a' ? 'b' : 'a'}` && unit.type !== 'okret_desantowy') continue;
-      if (state.units.some(u => u.alive && samePosition(u.position, next) && !(u.type === 'mina' && u.ownerId !== unit.ownerId))) continue;
+      if (state.units.some(u => u.alive && samePosition(u.position, next))) continue;
       visited.add(key(next));
       const nextPath = [...path, next];
       result.set(key(next), nextPath);

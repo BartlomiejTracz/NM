@@ -186,6 +186,9 @@ export function createGameServer(options: Options = {}) {
         // Synchronous validation and commit serialize actions for this room.
         const result = applyMove(room.state, data.action, role);
         if (result.error) throw new Error(result.error);
+        // Assign opaque IDs at the authoritative boundary, including newly laid mines.
+        const existingIds = new Set(room.state.units.map(u => u.id));
+        for (const unit of result.newState.units) if (!existingIds.has(unit.id)) unit.id = randomUUID();
         room.state = result.newState;
         room.touchedAt = Date.now();
         room.actions.set(key, fingerprint);

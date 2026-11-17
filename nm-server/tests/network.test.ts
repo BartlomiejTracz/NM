@@ -117,7 +117,7 @@ test('actions are serialized, deduplicated, bound to actor, game and revision', 
   const next = await ok<GameView>(h.b, 'game_action', { ...h.room, actionId: randomUUID(), expectedRevision: bState.revision, action: bAction });
   assert.equal(next.turn, 3);
 });
-test('secret mines and their coordinates never appear in opponent snapshots or events', async t => {
+test('mines appear as unidentified contacts with opaque IDs in live snapshots and sync', async t => {
   const h = await harness(t); let aState = await h.start();
   const sweeper = aState.units.find(u => u.type === 'tralowiec' && u.ownerId === 'a'); assert.ok(sweeper);
   // Pick a visible empty water/port square in range of a sweeper in the setup fixture.
@@ -131,7 +131,11 @@ test('secret mines and their coordinates never appear in opponent snapshots or e
   aState = await ok<GameView>(h.a, 'game_action', { ...h.room, actionId: randomUUID(), expectedRevision: aState.revision, action: { kind: 'lay_mine', unitId: sweeper.id, at } });
   const [bState] = await pushed as [GameView];
   const mine = aState.units.find(u => u.type === 'mina'); assert.ok(mine);
-  assert.equal(bState.units.some(u => u.id === mine.id), false);
+  assert.equal(bState.units.find(u => u.id === mine.id)?.type, 'unknown');
+  assert.deepEqual(bState.units.find(u => u.id === mine.id)?.position, at);
+  assert.match(mine.id, /^[0-9a-f-]{36}$/);
+  const synced = await ok<GameView>(h.b, 'sync_state', h.room);
+  assert.deepEqual(synced.units.find(u => u.id === mine.id), bState.units.find(u => u.id === mine.id));
   assert.equal(bState.logs.some(log => log.includes(`(${at.col}, ${at.row})`)), false);
   assert.equal(JSON.stringify(bState).includes(h.joinedA.session.token), false);
 });

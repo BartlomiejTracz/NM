@@ -23,7 +23,7 @@ export class InputHandler {
       if (!selected || selected.type === 'unknown') { this.reset(); return; }
       let action: MoveAction | undefined;
       if (this.actionMode !== 'default') {
-        if (selected.type !== 'tralowiec' || distance(selected.position, pos) > 2 || distance(selected.position, pos) === 0 || getTile(state.board, pos) === 'neutral' || getTile(state.board, selected.position) === 'neutral' || clicked) {
+        if (selected.type !== 'tralowiec' || distance(selected.position, pos) > 2 || distance(selected.position, pos) === 0 || getTile(state.board, pos) === 'neutral' || getTile(state.board, selected.position) === 'neutral' || (clicked && (this.actionMode === 'lay_mine' || clicked.ownerId === role))) {
           alert('Wybierz wolne pole w zasięgu 2 pól, poza strefą neutralną.'); return;
         }
         action = { kind: this.actionMode, unitId: selected.id, at: pos };
