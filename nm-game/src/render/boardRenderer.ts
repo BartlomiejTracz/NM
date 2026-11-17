@@ -2,6 +2,7 @@ import type { GameView as GameState } from '../engine/types';
 import { isExitTile } from '../engine/board';
 
 export const TILE_SIZE = 40;
+export const BOARD_MARGIN = 24;
 
 const RADAR_COLORS = {
   sea: 'transparent',       
@@ -26,12 +27,14 @@ export class BoardRenderer {
     const { board } = state;
     const canvas = this.ctx.canvas;
     
-    const newWidth = board.columns * TILE_SIZE;
-    const newHeight = board.rows * TILE_SIZE;
+    const newWidth = board.columns * TILE_SIZE + BOARD_MARGIN * 2;
+    const newHeight = board.rows * TILE_SIZE + BOARD_MARGIN * 2;
     if (canvas.width !== newWidth) canvas.width = newWidth;
     if (canvas.height !== newHeight) canvas.height = newHeight;
 
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
+    this.ctx.save();
+    this.ctx.translate(BOARD_MARGIN, BOARD_MARGIN);
 
     for (let r = 0; r < board.rows; r++) {
       for (let c = 0; c < board.columns; c++) {
@@ -109,5 +112,36 @@ export class BoardRenderer {
       this.ctx.lineTo(c * TILE_SIZE, board.rows * TILE_SIZE);
       this.ctx.stroke();
     }
+    // A round is two player turns. Trails come from the authoritative server path.
+    for (const trail of state.moveTrails ?? []) {
+      if (state.turn - trail.turn > 2 || trail.path.length < 2) continue;
+      this.ctx.strokeStyle = trail.playerId === 'a' ? '#b1e7f1' : '#efc181';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([6, 4]);
+      this.ctx.beginPath();
+      trail.path.forEach((point, index) => {
+        const x = (point.col + .5) * TILE_SIZE, y = (point.row + .5) * TILE_SIZE;
+        if (index === 0) this.ctx.moveTo(x, y); else this.ctx.lineTo(x, y);
+      });
+      this.ctx.stroke(); this.ctx.setLineDash([]);
+      const start = trail.path[0]!;
+      this.ctx.beginPath(); this.ctx.arc((start.col+.5)*TILE_SIZE,(start.row+.5)*TILE_SIZE,5,0,Math.PI*2);this.ctx.stroke();
+    }
+    this.ctx.restore();
+    this.ctx.save();
+    this.ctx.fillStyle = '#bfd1ae'; this.ctx.font = '13px Consolas, monospace';
+    this.ctx.textAlign = 'center'; this.ctx.textBaseline = 'middle';
+    for (let col = 0; col < board.columns; col++) {
+      const x = BOARD_MARGIN + (col + .5) * TILE_SIZE;
+      const label = String.fromCharCode(65 + col);
+      this.ctx.fillText(label, x, BOARD_MARGIN / 2);
+      this.ctx.fillText(label, x, canvas.height - BOARD_MARGIN / 2);
+    }
+    for (let row = 0; row < board.rows; row++) {
+      const y = BOARD_MARGIN + (row + .5) * TILE_SIZE;
+      this.ctx.fillText(String(row + 1), BOARD_MARGIN / 2, y);
+      this.ctx.fillText(String(row + 1), canvas.width - BOARD_MARGIN / 2, y);
+    }
+    this.ctx.restore();
   }
 }

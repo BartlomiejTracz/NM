@@ -6,5 +6,5 @@ export function playerView(state: GameState, playerId: PlayerId, ready: GameView
     .map(u => ({ ...u, position: { ...u.position }, type: u.ownerId === playerId || u.revealed || state.phase === 'finished' ? u.type : 'unknown' }));
   // Avoid leaking the original fleet submission/placement order.
   units.sort((a, b) => a.id.localeCompare(b.id));
-  return { ...state, board: { ...state.board, tiles: state.board.tiles.map(r => [...r]) }, units, logs: [...state.logs], ready: { ...ready }, connected: { ...connected } };
+  return { ...state, moveTrails: (state.moveTrails ?? []).map(trail => ({...trail, path: trail.path.map(p => ({...p}))})), board: { ...state.board, tiles: state.board.tiles.map(r => [...r]) }, units, logs: [...state.logs], ready: { ...ready }, connected: { ...connected } };
 }

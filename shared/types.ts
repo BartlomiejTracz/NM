@@ -54,6 +54,7 @@ export interface GameState {
   winnerId: PlayerId | null;
   setupInventory?: Record<UnitType, number>;
   logs: string[];
+  moveTrails?: { playerId: PlayerId; turn: number; path: Position[] }[];
 }
 
 export type ViewUnit = Omit<Unit, 'type'> & { type: UnitType | 'unknown' };

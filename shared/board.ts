@@ -72,17 +72,21 @@ function hasWallBetween(p1: Position, p2: Position, board: BoardConfig): boolean
  * Zablokowanie ruchu przez dynamicznie generowane ściany
  */
 export function canCrossWall(from: Position, to: Position, board: BoardConfig): boolean {
+  if (!getTile(board, from) || !getTile(board, to)) return false;
+  if (Math.abs(from.col - to.col) > 1 || Math.abs(from.row - to.row) > 1) return false;
   // Ruch w poziomie i pionie
   if (from.row === to.row || from.col === to.col) {
     return !hasWallBetween(from, to, board);
   }
   
-  // Ruch na ukos (blokuje, jeśli jakakolwiek ścieżka brzegowa przecina mur)
+  // Do not cross a closed port boundary. Outside corners may be rounded
+  // when at least one of the two bordering routes is free of walls.
+  if (hasWallBetween(from, to, board)) return false;
   const corner1 = { col: from.col, row: to.row };
   const corner2 = { col: to.col, row: from.row };
   
   const crossesWall1 = hasWallBetween(from, corner1, board) || hasWallBetween(corner1, to, board);
   const crossesWall2 = hasWallBetween(from, corner2, board) || hasWallBetween(corner2, to, board);
   
-  return !(crossesWall1 || crossesWall2);
+  return !(crossesWall1 && crossesWall2);
 }

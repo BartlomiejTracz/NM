@@ -50,3 +50,9 @@ Serwer przechowuje pokoje w pamięci jednego procesu. Restart usuwa trwające pa
 ## Testy
 
 `npm test` sprawdza typy testów i uruchamia testy domenowe oraz rzeczywiste lokalne połączenia Socket.IO, w tym podszywanie się pod gracza, tajność flot, niepoprawne komunikaty, deduplikację, wyścig akcji, wyjście i odzyskiwanie sesji. Testy wymagają zależności obu paczek (`npm run setup`) i dostępu do połączeń na `127.0.0.1`.
+
+## Plansza i ostatnie ruchy
+
+- Otwarte narożniki portów można opłynąć po skosie, jeśli przynajmniej jedna strona narożnika nie przecina muru. Zamknięta granica portu pozostaje nieprzekraczalna.
+- Ślady ruchu są zapisywane na serwerze i synchronizowane z graczami. Zawierają rzeczywistą trasę, bez typu okrętu; wygasają po dwóch turach graczy.
+- Współrzędne A–R / 1–12 są widoczne na czterech krawędziach planszy. Dziennik używa tych samych oznaczeń.

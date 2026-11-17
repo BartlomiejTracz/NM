@@ -1,5 +1,5 @@
 import type { GameView as GameState, PlayerId } from '../engine/types';
-import { TILE_SIZE } from './boardRenderer';
+import { TILE_SIZE, BOARD_MARGIN } from './boardRenderer';
 
 const sprites: Record<string, HTMLCanvasElement> = {};
 const spritesEnemy: Record<string, HTMLCanvasElement> = {}; // <-- NOWY BAZOR TEKSTUR DLA WROGA
@@ -52,8 +52,8 @@ export class UnitRenderer {
 
     state.units.forEach(unit => {
       if (!unit.position || unit.position.col < 0) return;
-      const cx = unit.position.col * TILE_SIZE + TILE_SIZE / 2;
-      const cy = unit.position.row * TILE_SIZE + TILE_SIZE / 2;
+      const cx = BOARD_MARGIN + unit.position.col * TILE_SIZE + TILE_SIZE / 2;
+      const cy = BOARD_MARGIN + unit.position.row * TILE_SIZE + TILE_SIZE / 2;
       
       const isEnemy = unit.ownerId !== localPlayer;
       

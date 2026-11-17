@@ -8,7 +8,7 @@
 #setup-selection {font-size:.85rem;line-height:1.5;margin:0;}
 .touch-help {font-size:.8rem;line-height:1.5;}
 #screen-setup .crt-screen.setup-enlarged {overflow:auto;display:block;touch-action:pan-x pan-y;}
-#screen-setup .setup-enlarged #setup-canvas {max-width:none!important;max-height:none!important;width:720px;height:480px;}
+#screen-setup .setup-enlarged #setup-canvas {max-width:none!important;max-height:none!important;width:768px;height:528px;}
 #screen-setup .setup-enlarged .radar-overlay-text {display:none;}
 @media(max-width:1000px) {
   html,body {min-width:0;overflow-x:clip;}

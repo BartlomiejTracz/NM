@@ -1,6 +1,6 @@
 import { installBoardViewport } from './render/viewport';
 import { store, emptyState } from './store/store';
-import { BoardRenderer, TILE_SIZE } from './render/boardRenderer';
+import { BoardRenderer, TILE_SIZE, BOARD_MARGIN } from './render/boardRenderer';
 import { UnitRenderer } from './render/unitRenderer';
 import { InputHandler } from './render/inputHandler';
 import { pointerTile } from './render/coordinates';
@@ -136,7 +136,7 @@ function renderSetup() {
   if (selected) {
     const ctx = setupCanvas.getContext('2d')!;
     ctx.strokeStyle = '#ffe39b'; ctx.lineWidth = 3;
-    ctx.strokeRect(selected.position.col * TILE_SIZE + 2, selected.position.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+    ctx.strokeRect(BOARD_MARGIN + selected.position.col * TILE_SIZE + 2, BOARD_MARGIN + selected.position.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
   }
   element('setup-selection').textContent = selected ? 'Wybrano okręt. Dotknij nowego pola lub cofnij do magazynu.'
     : selectedPlacement ? `Wybrano: ${selectedPlacement.replaceAll('_', ' ')}. Dotknij wolnego pola portu.` : 'Wybierz jednostkę z magazynu, a potem dotknij pola portu.';
@@ -336,10 +336,10 @@ function renderLoop() {
       }
       if (input.actionMode === 'default') {
         gameCtx.fillStyle = 'rgba(98,216,59,0.2)';
-        for (const pos of moveCache.moves) gameCtx.fillRect(pos.col * TILE_SIZE, pos.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+        for (const pos of moveCache.moves) gameCtx.fillRect(BOARD_MARGIN + pos.col * TILE_SIZE, BOARD_MARGIN + pos.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
       const unit = state.units.find(u => u.id === id);
-      if (unit) { gameCtx.strokeStyle = '#62d83b'; gameCtx.strokeRect(unit.position.col * TILE_SIZE, unit.position.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
+      if (unit) { gameCtx.strokeStyle = '#62d83b'; gameCtx.strokeRect(BOARD_MARGIN + unit.position.col * TILE_SIZE, BOARD_MARGIN + unit.position.row * TILE_SIZE, TILE_SIZE, TILE_SIZE); }
     }
     gameUnits.render(state);
   }

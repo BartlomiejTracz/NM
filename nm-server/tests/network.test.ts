@@ -112,6 +112,10 @@ test('actions are serialized, deduplicated, bound to actor, game and revision', 
   assert.equal((await request(h.a, 'game_action', { ...payload, action: { ...payload.action, to: { col: 99, row: 99 } } })).ok, false);
   const bState = await ok<GameView>(h.b, 'sync_state', h.room);
   assert.equal(bState.revision, replay.revision); assert.equal(bState.activePlayerId, 'b');
+  assert.deepEqual(bState.moveTrails, first.data.moveTrails);
+  assert.equal(bState.moveTrails?.length, 1);
+  assert.deepEqual(bState.moveTrails?.[0]?.path.at(-1), payload.action.to);
+  assert.deepEqual(replay.moveTrails, first.data.moveTrails);
   const bAction = legalAction(bState);
   assert.equal((await request(h.b, 'game_action', { ...h.room, actionId: randomUUID(), expectedRevision: bState.revision - 1, action: bAction })).ok, false);
   const next = await ok<GameView>(h.b, 'game_action', { ...h.room, actionId: randomUUID(), expectedRevision: bState.revision, action: bAction });

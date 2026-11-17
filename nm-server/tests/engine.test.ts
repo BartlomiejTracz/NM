@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { applyMove } from '../../shared/gameState';
-import { getTile } from '../../shared/board';
+import { getTile, canCrossWall, createInitialBoard } from '../../shared/board';
 import { getLegalMoves } from '../../shared/movement';
 import { validateFleet, encodeFleet, decodeFleet, isValidPlacement } from '../../shared/setup';
 import { playerView } from '../../shared/view';
@@ -158,9 +158,9 @@ test('subscriber failures cannot undo an authoritative snapshot or block others'
   } finally { console.error = old; }
 });
 test('scaled canvas maps the clicked pixel to the correct tile and rejects boundaries', () => {
-  const canvas = { width: 720, height: 480, getBoundingClientRect: () => ({ left: 10, top: 20, width: 360, height: 240 }) } as HTMLCanvasElement;
-  assert.deepEqual(pointerTile(canvas, { clientX: 60, clientY: 70 }), { col: 2, row: 2 });
-  assert.equal(pointerTile(canvas, { clientX: 370, clientY: 20 }), null);
+  const canvas = { width: 768, height: 528, getBoundingClientRect: () => ({ left: 10, top: 20, width: 384, height: 264 }) } as HTMLCanvasElement;
+  assert.deepEqual(pointerTile(canvas, { clientX: 72, clientY: 82 }), { col: 2, row: 2 });
+  assert.equal(pointerTile(canvas, { clientX: 394, clientY: 32 }), null);
   assert.equal(pointerTile(canvas, { clientX: 0, clientY: 20 }), null);
 });
 
@@ -172,4 +172,44 @@ test('sweeping a non-mine contact consumes the turn without harming either unit'
   assert.equal(r.newState.turn, 2);
   assert.ok(r.newState.units.every(u => u.alive));
   assert.equal(r.newState.units.find(u => u.id === 'contact')!.revealed, false);
+});
+
+
+test('open port corner stays traversable even beside a mine, symmetrically for both sides', () => {
+  const board = createInitialBoard();
+  for (const mirror of [false, true]) {
+    const p = (col:number,row:number) => mirror ? {col:17-col,row:11-row} : {col,row};
+    const from=p(4,4), to=p(3,5), adjacent=p(4,5);
+    assert.equal(canCrossWall(from,to,board),true);
+    assert.equal(canCrossWall(to,from,board),true);
+    assert.equal(canCrossWall(p(3,4),p(4,4),board),false);
+    const s=state([unit('ship','a','okret_rakietowy',from.col,from.row),unit('mine','b','mina',adjacent.col,adjacent.row)]);
+    const v=playerView(s,'a',{a:true,b:true},{a:true,b:true});
+    assert.deepEqual(getLegalMoves(s,'ship'),getLegalMoves(v,'ship'));
+    assert.equal(applyMove(s,{kind:'move',unitId:'ship',to},'a').error,undefined);
+  }
+});
+
+test('authoritative movement trail includes start and intermediate tiles and expires after two player turns', () => {
+  const s=state([unit('ship','a','pancernik',5,0),unit('other','b','pancernik',10,0)]);
+  const first=applyMove(s,move('ship',7,0),'a').newState;
+  assert.deepEqual(first.moveTrails?.[0]?.path,[{col:5,row:0},{col:6,row:0},{col:7,row:0}]);
+  const second=applyMove(first,move('other',10,1),'b').newState;
+  assert.equal(second.moveTrails?.length,2);
+  const third=applyMove(second,move('ship',7,1),'a').newState;
+  assert.equal(third.moveTrails?.length,2);
+  assert.ok(third.moveTrails?.every(t=>t.turn>1));
+  const view=playerView(second,'b',{a:true,b:true},{a:true,b:true});
+  assert.deepEqual(view.moveTrails,second.moveTrails);
+  view.moveTrails![0]!.path[0]!.col=999;
+  assert.equal(second.moveTrails![0]!.path[0]!.col,5);
+  const invalid=applyMove(first,move('ship',17,11),'a');
+  assert.ok(invalid.error);assert.deepEqual(invalid.newState.moveTrails,first.moveTrails);
+});
+
+test('coordinate labels around all four board edges never select a tile', () => {
+  const canvas={width:768,height:528,getBoundingClientRect:()=>({left:0,top:0,width:768,height:528})} as HTMLCanvasElement;
+  for(const [clientX,clientY] of [[12,80],[756,80],[80,12],[80,516]]) assert.equal(pointerTile(canvas,{clientX,clientY}),null);
+  assert.deepEqual(pointerTile(canvas,{clientX:24,clientY:24}),{col:0,row:0});
+  assert.deepEqual(pointerTile(canvas,{clientX:743,clientY:503}),{col:17,row:11});
 });
