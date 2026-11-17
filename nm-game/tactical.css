@@ -345,3 +345,10 @@
   font-size: .7rem;
 }
 .landing-footer {align-items: center; flex-wrap: wrap; gap: 12px;}
+.landing-footer .contact-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
