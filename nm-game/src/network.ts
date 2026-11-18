@@ -91,8 +91,8 @@ export class NetworkClient {
     try { return await operation(); }
     finally { if (epoch === this.epoch) { this.busy = false; this.onStatus(); } }
   }
-  async create() {
-    return this.enter('create_room', {});
+  async create(trailsEnabled = true) {
+    return this.enter('create_room', { trailsEnabled });
   }
   async join(roomId: string) {
     return this.enter('join_room', { roomId });

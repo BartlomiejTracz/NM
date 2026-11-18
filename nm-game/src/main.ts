@@ -5,6 +5,7 @@ import { UnitRenderer } from './render/unitRenderer';
 import { InputHandler } from './render/inputHandler';
 import { pointerTile } from './render/coordinates';
 import { installUnitLabels } from './render/unitLabels';
+import { installEnemyTracker } from './render/enemyTracker';
 import { NetworkClient } from './network';
 import type { Unit, GameView, PlayerId } from './engine/types';
 import { getLegalMoves } from './engine/movement';
@@ -69,6 +70,7 @@ const setupRenderer = new UnitRenderer(setupCanvas, role);
 installBoardViewport(gameCanvas, element('crt-container'), element('world-layer'));
 const input = new InputHandler(gameCanvas, () => network.session?.playerId ?? null, () => network.canAct, action => network.action(action));
 const resetUnitLabels = installUnitLabels(gameCanvas, element('unit-inspection'), () => store.getState(), role);
+const bindEnemyTracker = installEnemyTracker(element('manual-tracker'));
 
 function showScreen(id: 'screen-menu' | 'screen-setup' | 'screen-game') {
   const changed = !document.getElementById(id)!.classList.contains('active');
@@ -102,6 +104,11 @@ function setupLocked() {
 }
 function renderControls() {
   const player = network.session?.playerId;
+  bindEnemyTracker(network.session?.gameId ?? null, player ?? null);
+  for (const label of document.querySelectorAll<HTMLElement>('[data-game-options]')) {
+    label.hidden = !player || localEditor;
+    label.textContent = `Linie trasy: ${network.state?.trailsEnabled === false ? 'wyłączone' : 'włączone'}`;
+  }
   for (const label of document.querySelectorAll<HTMLElement>('[data-player-identity]')) {
     label.hidden = !player || localEditor;
     label.textContent = player ? `Jesteś graczem ${player.toUpperCase()} · Twój port: ${player === 'a' ? 'lewa' : 'prawa'} strona` : '';
@@ -112,6 +119,7 @@ function renderControls() {
     : network.session ? 'Pokój aktywny — przekaż kod drugiej osobie.' : 'Połączono z serwerem. Możecie rozpocząć grę.';
   const unavailable = !network.connected || network.busy || !!network.session;
   button('btn-create-room').disabled = unavailable;
+  element<HTMLInputElement>('create-trails').disabled = network.busy || !!network.session;
   button('btn-join-room').disabled = unavailable;
   button('btn-menu-fleet-creator').disabled = network.busy;
   saveButton.disabled = setupLocked();
@@ -181,7 +189,7 @@ network.onState = state => {
   if (state.phase === 'lobby') {
     showScreen('screen-menu');
     roomDisplay.style.display = 'block';
-    const text = document.createElement('p'); text.textContent = `Kod pokoju: ${state.roomId}. Oczekiwanie na drugiego gracza.`;
+    const text = document.createElement('p'); text.textContent = `Kod pokoju: ${state.roomId}. Linie trasy: ${state.trailsEnabled === false ? 'wyłączone' : 'włączone'}. Oczekiwanie na drugiego gracza.`;
     const exit = document.createElement('button'); exit.textContent = 'OPUŚĆ POKÓJ'; exit.addEventListener('click', () => task(leave));
     roomDisplay.replaceChildren(text, exit);
   } else if (state.phase === 'setup') {
@@ -196,7 +204,7 @@ network.onState = state => {
 network.onStatus = renderControls;
 network.onEnded = reason => { resetMenu(); alert(reason); };
 
-button('btn-create-room').addEventListener('click', () => task(() => network.create()));
+button('btn-create-room').addEventListener('click', () => task(() => network.create(element<HTMLInputElement>('create-trails').checked)));
 button('btn-join-room').addEventListener('click', () => {
   const code = element<HTMLInputElement>('input-room-code').value.trim().toUpperCase();
   if (!/^[A-F0-9]{8}$/.test(code)) { alert('Wpisz ośmioznakowy kod pokoju.'); return; }

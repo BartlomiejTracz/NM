@@ -112,7 +112,7 @@ export function createGameServer(options: Options = {}) {
     const handlers: Record<string, (data: unknown) => unknown> = {
       create_room(input) {
         const data = requireObject(input);
-        if (Object.keys(data).length) throw new Error('Planszę tworzy serwer.');
+        if (Object.keys(data).some(key => key !== 'trailsEnabled') || ('trailsEnabled' in data && typeof data.trailsEnabled !== 'boolean')) throw new Error('Nieprawidłowe ustawienia pokoju.');
         if (membership.has(socket.id)) throw new Error('Najpierw opuść obecny pokój.');
         sweep();
         if (rooms.size >= (options.maxRooms ?? 1000)) throw new Error('Serwer osiągnął limit pokoi.');
@@ -122,6 +122,7 @@ export function createGameServer(options: Options = {}) {
         let roomId: string;
         do { roomId = randomBytes(4).toString('hex').toUpperCase(); } while (rooms.has(roomId));
         const room: Room = { state: { roomId, gameId: randomUUID(), revision: 0, board: createInitialBoard(), units: [], turn: 1, activePlayerId: 'a', phase: 'lobby', winnerId: null, logs: [] }, players: {}, ready: { a: false, b: false }, actions: new Map(), touchedAt: Date.now() };
+        room.state.trailsEnabled = data.trailsEnabled !== false;
         rooms.set(roomId, room);
         return enter(room, 'a');
       },

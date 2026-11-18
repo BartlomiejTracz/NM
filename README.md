@@ -56,3 +56,7 @@ Serwer przechowuje pokoje w pamięci jednego procesu. Restart usuwa trwające pa
 - Otwarte narożniki portów można opłynąć po skosie, jeśli przynajmniej jedna strona narożnika nie przecina muru. Zamknięta granica portu pozostaje nieprzekraczalna.
 - Ślady ruchu są zapisywane na serwerze i synchronizowane z graczami. Zawierają rzeczywistą trasę, bez typu okrętu; wygasają po dwóch turach graczy.
 - Współrzędne A–R / 1–12 są widoczne na czterech krawędziach planszy. Dziennik używa tych samych oznaczeń.
+
+## Ustawienia lobby i notatki gracza
+- Host wybiera opcję „Gra z liniami trasy” przy tworzeniu pokoju (domyślnie włączona). Serwer zapisuje ją dla obu graczy; wyłączenie oznacza brak zapisu i wysyłania śladów.
+- Ręczny licznik strat przeciwnika zapisuje się przy każdym kliknięciu w localStorage, osobno dla identyfikatora partii i strony gracza. Przełączenie karty, odświeżenie i ponowne połączenie zachowują notatki w tej przeglądarce; nowa partia ma oddzielny licznik.

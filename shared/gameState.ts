@@ -54,7 +54,7 @@ export function applyMove(state: GameState, input: unknown, playerId: PlayerId):
         const mine = next.units.find(u => u.alive && u.type === 'mina' && u.ownerId !== playerId && samePosition(u.position, step));
         if (mine) { battle(mine); break; }
       }
-      next.moveTrails = [...(next.moveTrails ?? []), {playerId, turn: state.turn, path: travelled}];
+      if (state.trailsEnabled !== false) next.moveTrails = [...(next.moveTrails ?? []), {playerId, turn: state.turn, path: travelled}];
       // Public messages never disclose an unrevealed unit's type.
       next.logs.push(`[Gracz ${playerId.toUpperCase()}] Jednostka przemieściła się na ${String.fromCharCode(65 + unit.position.col)}${unit.position.row + 1}.`);
       break;
@@ -77,7 +77,7 @@ export function applyMove(state: GameState, input: unknown, playerId: PlayerId):
   }
   next = tickNeutralZoneTimers(next, playerId);
   next.turn++;
-  next.moveTrails = (next.moveTrails ?? []).filter(trail => next.turn - trail.turn <= 2);
+  next.moveTrails = next.trailsEnabled === false ? [] : (next.moveTrails ?? []).filter(trail => next.turn - trail.turn <= 2);
   next.revision++;
   next.activePlayerId = playerId === 'a' ? 'b' : 'a';
   next.winnerId = checkWinCondition(next);

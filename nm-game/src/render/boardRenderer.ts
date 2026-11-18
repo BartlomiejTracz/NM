@@ -113,7 +113,7 @@ export class BoardRenderer {
       this.ctx.stroke();
     }
     // A round is two player turns. Trails come from the authoritative server path.
-    for (const trail of state.moveTrails ?? []) {
+    for (const trail of state.trailsEnabled === false ? [] : state.moveTrails ?? []) {
       if (state.turn - trail.turn > 2 || trail.path.length < 2) continue;
       this.ctx.strokeStyle = trail.playerId === 'a' ? '#b1e7f1' : '#efc181';
       this.ctx.lineWidth = 2;

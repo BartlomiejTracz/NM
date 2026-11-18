@@ -1,4 +1,13 @@
 /* Touch targets and responsive layouts; no document-wide gesture suppression. */
+.landing .lobby-option {display:flex;align-items:center;gap:10px;min-height:44px;margin:12px 0 0;cursor:pointer;}
+.landing .lobby-option input {width:22px;height:22px;min-height:22px;margin:0;flex-shrink:0;accent-color:var(--text-active);}
+#trails-hint {display:block;margin-bottom:14px;}
+.game-options {margin:4px 0;font-size:.8rem;color:var(--text-normal);}
+.game-options[hidden] {display:none;}
+.enemy-tracker-row {display:flex;justify-content:space-between;align-items:center;gap:6px;}
+.enemy-tracker-row>div {display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.enemy-tracker-row button {padding:2px 8px;font-size:1rem;}
+.enemy-tracker-row>div>span {min-width:44px;text-align:center;color:var(--text-active);}
 .player-identity {margin:8px 0 0;font-size:.85rem;line-height:1.5;color:var(--text-active);font-weight:700;letter-spacing:.02em;}
 .unit-inspection {min-height:3em;margin:4px 0 0;font-size:.8rem;line-height:1.5;color:var(--text-normal);max-width:65ch;}
 .unit-tooltip {position:fixed;z-index:1000;pointer-events:none;max-width:calc(100vw - 16px);padding:10px 12px;border:1px solid var(--text-active);border-radius:3px;background:var(--hw-bg,#101912);color:var(--text-active);font:14px/1.5 Consolas,monospace;box-shadow:0 4px 18px #0009;}

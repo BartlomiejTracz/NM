@@ -54,6 +54,7 @@ export interface GameState {
   winnerId: PlayerId | null;
   setupInventory?: Record<UnitType, number>;
   logs: string[];
+  trailsEnabled?: boolean;
   moveTrails?: { playerId: PlayerId; turn: number; path: Position[] }[];
 }
 
@@ -83,7 +84,7 @@ export interface ServerEvents {
   room_closed: (data: { roomId: string; gameId: string; reason: string }) => void;
 }
 export interface ClientEvents {
-  create_room: (data: Record<string, never>, ack: (r: Reply<{ session: Session; state: GameView }>) => void) => void;
+  create_room: (data: { trailsEnabled?: boolean }, ack: (r: Reply<{ session: Session; state: GameView }>) => void) => void;
   join_room: (data: { roomId: string }, ack: (r: Reply<{ session: Session; state: GameView }>) => void) => void;
   resume_session: (data: Session, ack: (r: Reply<{ session: Session; state: GameView }>) => void) => void;
   submit_fleet: (data: { roomId: string; gameId: string; fleet: unknown }, ack: (r: Reply<GameView>) => void) => void;

@@ -28,7 +28,7 @@ async function ok<T>(socket: Socket, event: string, payload: unknown): Promise<T
   const result = await request<T>(socket, event, payload); assert.ok(result.ok, result.ok ? '' : result.error); return result.data;
 }
 const identity = (s: Session): Identity => ({ roomId: s.roomId, gameId: s.gameId });
-async function harness(t: TestContext, options: Parameters<typeof createGameServer>[0] = {}) {
+async function harness(t: TestContext, options: Parameters<typeof createGameServer>[0] = {}, settings: {trailsEnabled?: boolean} = {}) {
   const server = createGameServer(options);
   server.httpServer.listen(0, '127.0.0.1'); await nodeOnce(server.httpServer, 'listening');
   const address = server.httpServer.address(); assert.ok(address && typeof address === 'object');
@@ -40,7 +40,7 @@ async function harness(t: TestContext, options: Parameters<typeof createGameServ
     await socketOnce(socket, 'connect'); return socket;
   };
   const a = await connect(); const b = await connect();
-  const joinedA = await ok<Joined>(a, 'create_room', {});
+  const joinedA = await ok<Joined>(a, 'create_room', settings);
   const joinedB = await ok<Joined>(b, 'join_room', { roomId: joinedA.session.roomId });
   const room = identity(joinedA.session);
   const start = async () => {
@@ -68,6 +68,33 @@ test('malformed network packets cannot crash the service', async t => {
     const result = await request(outsider, event, data); assert.equal(result.ok, false);
   }
   assert.equal((await ok<GameView>(h.a, 'sync_state', h.room)).phase, 'setup');
+});
+
+for (const trailsEnabled of [true, false]) {
+  test(`lobby trail setting ${trailsEnabled} is shared, enforced and restored on reconnect`, async t => {
+    const h = await harness(t, {}, {trailsEnabled});
+    assert.equal(h.joinedA.state.trailsEnabled, trailsEnabled);
+    assert.equal(h.joinedB.state.trailsEnabled, trailsEnabled);
+    const initial = await h.start();
+    const moved = await ok<GameView>(h.a, 'game_action', {...h.room, actionId: randomUUID(), expectedRevision: initial.revision, action: legalAction(initial), trailsEnabled: !trailsEnabled});
+    assert.equal(moved.trailsEnabled, trailsEnabled);
+    assert.equal(moved.moveTrails?.length, trailsEnabled ? 1 : 0);
+    const opponent = await ok<GameView>(h.b, 'sync_state', h.room);
+    assert.deepEqual(opponent.moveTrails, moved.moveTrails);
+    const reconnected = await h.connect();
+    const resumed = await ok<Joined>(reconnected, 'resume_session', h.joinedA.session);
+    assert.equal(resumed.state.trailsEnabled, trailsEnabled);
+    assert.deepEqual(resumed.state.moveTrails, moved.moveTrails);
+  });
+}
+
+test('lobby trail option rejects malformed values and defaults to enabled', async t => {
+  const h = await harness(t);
+  assert.equal(h.joinedA.state.trailsEnabled, true);
+  const outsider = await h.connect();
+  for (const trailsEnabled of ['false', 0, null, {}, []]) {
+    assert.equal((await request(outsider, 'create_room', {trailsEnabled})).ok, false);
+  }
 });
 test('outsiders cannot act, submit either fleet or retrieve another player state', async t => {
   const h = await harness(t); const outsider = await h.connect();
