@@ -6,6 +6,7 @@ import { InputHandler } from './render/inputHandler';
 import { pointerTile } from './render/coordinates';
 import { installUnitLabels } from './render/unitLabels';
 import { installEnemyTracker } from './render/enemyTracker';
+import { createMenuPreview } from './render/menuPreview';
 import { NetworkClient } from './network';
 import type { Unit, GameView, PlayerId } from './engine/types';
 import { getLegalMoves } from './engine/movement';
@@ -43,6 +44,7 @@ renderAtmosphere();
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const button = (id: string) => element<HTMLButtonElement>(id);
 const gameCanvas = element<HTMLCanvasElement>('game-canvas');
+const renderMenuPreview = createMenuPreview(element<HTMLCanvasElement>('menu-canvas'));
 const setupCanvas = element<HTMLCanvasElement>('setup-canvas');
 const gameCtx = gameCanvas.getContext('2d')!;
 const inventoryList = element<HTMLDivElement>('inventory-list');
@@ -343,6 +345,7 @@ store.subscribe(state => {
 let moveCache = { revision: -1, gameId: '', selected: '', moves: [] as { row: number; col: number }[] };
 function renderLoop() {
   const state = store.getState();
+  if (element('screen-menu').classList.contains('active')) renderMenuPreview();
   if (state.phase === 'playing' || state.phase === 'finished') {
     gameBoard.render(state);
     const id = input.getSelectedUnitId();

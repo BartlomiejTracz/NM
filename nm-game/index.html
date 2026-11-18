@@ -45,25 +45,53 @@
   <link id="theme-style" rel="stylesheet" href="./style.css">
   <link rel="stylesheet" href="./tactical.css">
   <link rel="stylesheet" href="./mobile.css">
+  <link rel="stylesheet" href="./landing.css">
 </head>
 <body>
 
   <a class="skip-link" href="#quick-start">Przejdź do zasad</a>
   <main id="screen-menu" class="screen active">
-    <div class="landing">
-      <header class="landing-nav"><a class="wordmark" href="/">MM<span>Manewry Morskie</span></a><label class="theme-label">Wygląd <select id="menu-theme" aria-label="Motyw strony"><option value="ocean">Ocean</option><option value="paper">Bursztyn</option><option value="radar">Radar</option></select></label></header>
-      <section class="hero">
-        <div class="hero-copy"><p class="eyebrow">Strategia morska · Dla dwóch graczy</p><h1>Manewry morskie.<br><em>Obierz kurs na zwycięstwo.</em></h1><p class="hero-description">Zagraj w Manewry morskie online ze znajomym. Rozstaw flotę, poznaj siłę przeciwnika i przeprowadź desant do jego portu. Każdy ruch ma znaczenie.</p><a class="text-link" href="#quick-start">Pierwsza rozgrywka? Zacznij tutaj ↓</a>
-          <div class="sea-chart" aria-hidden="true"><div class="radar-sweep"></div><div class="chart-ring"></div><span class="chart-label">AKWEN / 01</span><div class="ship ship-one"></div><div class="ship ship-two"></div><div class="ship ship-three"></div><span class="chart-coordinate">54° N &nbsp; 18° E</span></div>
+    <div class="landing operations-shell">
+      <header class="ops-header">
+        <div class="ops-brand"><span class="ops-emblem" aria-hidden="true">MM</span><div><h1>Manewry morskie</h1><p>System radarowy M-1384 / stanowisko dowodzenia</p></div></div>
+        <label class="theme-label">Monitor <select id="menu-theme" aria-label="Motyw strony"><option value="ocean">Ocean</option><option value="paper">Bursztyn</option><option value="radar">Radar</option></select></label>
+      </header>
+      <div class="ops-layout">
+        <section class="ops-chart" aria-labelledby="chart-title">
+          <div class="ops-section-title"><h2 id="chart-title">01 / Akwen operacyjny</h2><span>18 × 12 pól</span></div>
+          <figure class="ops-monitor">
+            <div class="ops-glass"><div class="radar-sweep" aria-hidden="true"></div><div class="ops-screen-label" aria-hidden="true"><span>Podgląd planszy</span><span>M-1384</span></div><canvas id="menu-canvas" width="768" height="528" aria-label="Podgląd planszy: port gracza A po lewej, port gracza B po prawej, strefa neutralna pośrodku."></canvas></div>
+            <figcaption><span>PORT A / ZACHÓD</span><span>Przykładowe rozmieszczenie</span><span>PORT B / WSCHÓD</span></figcaption>
+          </figure>
+          <div class="ops-objective"><span>ZADANIE</span><p>Wprowadź okręt desantowy do portu przeciwnika <strong>lub zniszcz jego desant.</strong> Typy wrogich jednostek poznajesz w trakcie walki.</p></div>
+        </section>
+        <section class="ops-lobby" aria-labelledby="play-title">
+          <div class="ops-section-title"><h2 id="play-title">02 / Rozpocznij grę</h2><span>2 graczy</span></div>
+          <div class="ops-lobby-body">
+            <p id="connection-status" role="status" aria-live="polite">Łączenie z serwerem…</p>
+            <h3>Nowa bitwa</h3><p class="ops-help">Utwórz pokój i przekaż jego kod drugiej osobie.</p>
+            <label class="lobby-option"><input type="checkbox" id="create-trails" checked aria-describedby="trails-hint"><span>Gra z liniami trasy</span></label><small id="trails-hint">Trasy okrętów widoczne dla obu graczy przez jedną rundę.</small>
+            <button id="btn-create-room" class="ops-primary">Utwórz pokój</button>
+            <div class="ops-join"><label for="input-room-code">Masz kod pokoju?</label><div class="join-row"><input id="input-room-code" placeholder="A1B2C3D4" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="room-hint"><button id="btn-join-room">Dołącz</button></div><small id="room-hint">Wpisz osiem znaków otrzymanych od gospodarza.</small></div>
+            <div id="room-code-display" role="status" style="display:none"></div>
+            <div class="ops-practice"><span>Przygotowanie bez przeciwnika</span><button id="btn-menu-fleet-creator">Kreator floty</button></div>
+          </div>
+        </section>
+      </div>
+      <section id="quick-start" class="ops-briefing" aria-labelledby="intro-title">
+        <div class="ops-section-title"><h2 id="intro-title">03 / Odprawa przed bitwą</h2><button id="btn-menu-rules">Zasady i tabela jednostek</button></div>
+        <div class="ops-briefing-body">
+          <ol class="ops-orders">
+            <li><strong>Połączcie się w pokoju.</strong><p>Jedna osoba tworzy grę, druga dołącza za pomocą kodu. Gracz A ma lewy port, gracz B — prawy.</p></li>
+            <li><strong>Rozstaw 30 jednostek.</strong><p>Wybierz okręt z magazynu, potem pole własnego portu. Zatwierdź flotę. Bitwa zaczyna się, gdy oboje jesteście gotowi.</p></li>
+            <li><strong>Jedna tura, jedna akcja.</strong><p>Wybierz własny okręt i podświetlone pole ruchu lub wrogi cel. Trałowiec może również stawiać i rozbrajać miny.</p></li>
+          </ol>
+          <div class="ops-notes"><h3>Przed pierwszym manewrem</h3><details open><summary>Kropka to nierozpoznana jednostka</summary><p>Może oznaczać okręt albo minę. Najechanie lub dotknięcie własnej jednostki pokazuje jej nazwę. Typ przeciwnika pozostaje ukryty do rozpoznania.</p></details><details><summary>Nie każdy okręt pokona każdy cel</summary><p>Sprawdź tabelę jednostek. Jednakowe jednostki niszczą się wzajemnie. Desant nie atakuje — chroń go.</p></details><details><summary>Miny i strefa neutralna</summary><p>Atak na minę niszczy okręt i minę. Trałowiec usuwa ją bezpiecznie akcją rozminowania. Po czwartej własnej turze zakończonej w strefie neutralnej jednostka zostaje internowana.</p></details></div>
         </div>
-        <section class="play-card" aria-labelledby="play-title"><p class="eyebrow">Gotowi do wypłynięcia?</p><h2 id="play-title">Rozpocznij grę</h2><p>Zaproś znajomą osobę. Jedno z was tworzy pokój, drugie wpisuje jego kod.</p><p id="connection-status" role="status" aria-live="polite">Łączenie z serwerem…</p><label class="lobby-option"><input type="checkbox" id="create-trails" checked aria-describedby="trails-hint"><span>Gra z liniami trasy</span></label><small id="trails-hint">Pokazuj obu graczom trasę okrętu przez jedną rundę.</small><button id="btn-create-room" class="btn primary">Utwórz pokój</button><div class="divider"><span>lub dołącz do znajomego</span></div><label for="input-room-code">Kod pokoju</label><div class="join-row"><input id="input-room-code" placeholder="np. A1B2C3D4" maxlength="8" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-describedby="room-hint"><button id="btn-join-room" class="btn">Dołącz</button></div><small id="room-hint">Ośmioznakowy kod otrzymasz od osoby tworzącej pokój.</small><div id="room-code-display" role="status" style="display:none"></div><div class="card-bottom"><span>Chcesz najpierw poćwiczyć rozstawienie?</span><button id="btn-menu-fleet-creator" class="text-button">Otwórz kreator floty</button></div></section>
       </section>
-      <section id="quick-start" class="quick-start" aria-labelledby="intro-title"><div class="section-heading"><div><p class="eyebrow">Pierwszy raz na pokładzie</p><h2 id="intro-title">Od portu do pierwszego ruchu</h2></div><button id="btn-menu-rules" class="btn">Zasady i jednostki</button></div><div class="steps"><article><span class="step-number">01</span><h3>Połączcie się</h3><p>Utwórz pokój i przekaż kod drugiej osobie. Gdy dołączy, oboje przejdziecie do przygotowania flot.</p></article><article><span class="step-number">02</span><h3>Rozstaw flotę</h3><p>Rozstaw 30 jednostek: wybierz okręt z magazynu i dotknij dozwolonego pola swojego portu. Zatwierdź flotę i poczekaj na rywala.</p></article><article><span class="step-number">03</span><h3>Wykonaj manewr</h3><p>W swojej turze kliknij okręt, a potem podświetlone pole, aby go przesunąć. Kliknięcie wrogiej jednostki zleca atak, jeśli jest dozwolony.</p></article></div></section>
-      <section class="rules-intro"><div><p class="eyebrow">Twój cel</p><h2>Dwie drogi<br>do zwycięstwa.</h2><p>Wprowadź swój okręt desantowy do portu przeciwnika <strong>lub zniszcz jego desant</strong>. Chroń własny — nie może atakować.</p></div><div class="rule-questions"><details open><summary>Co mogę zrobić w swojej turze?</summary><p>Wykonujesz jedną akcję: ruch, atak albo operację minową trałowca. Zasięg zależy od jednostki. Ruch może prowadzić także po skosie, ale nie przez inne okręty ani ściany portu.</p></details><details><summary>Dlaczego nie znam okrętów przeciwnika?</summary><p>Typy nierozpoznanych jednostek są ukryte. Mina przeciwnika jest widoczna jako kropka, tak jak nierozpoznany okręt. Obserwuj ruchy i wyniki starć. Nie każdy okręt pokona każdego — tabela jednostek pomoże wybrać atak.</p></details><details><summary>Na co uważać podczas pierwszej gry?</summary><p>Jednakowe jednostki niszczą się wzajemnie. Atak na minę niszczy zarówno okręt, jak i minę. Trałowiec może ją bezpiecznie usunąć akcją rozminowania. Nie pozostawiaj jednostki w strefie neutralnej: po czwartej własnej turze zakończonej w tej strefie zostanie internowana.</p></details><details><summary>Jak przygotować flotę bez przeciwnika?</summary><p>Otwórz kreator floty. Przeciągaj jednostki z magazynu, zamieniaj je miejscami i użyj prawego przycisku myszy, aby cofnąć jednostkę. Gotowy schemat możesz pobrać i wczytać przed kolejną partią. Na telefonie dotknij jednostki w magazynie, a następnie pola portu. Przycisk „Powiększ port” ułatwia precyzyjne rozstawianie.</p></details></div></section>
-      <footer class="landing-footer"><span>Manewry Morskie</span><a class="contact-link" href="https://www.instagram.com/35bartolini/" target="_blank" rel="noopener noreferrer" aria-label="Kontakt na Instagramie: 35Bartolini (otwiera nową kartę)">Kontakt: Instagram @35Bartolini</a><button data-atmosphere-toggle aria-pressed="false">Wstrzymaj animację radaru</button><span>Rozpoznanie. Decyzja. Manewr.</span></footer>
+      <footer class="ops-footer"><span>MM / Gra taktyczna dla dwóch graczy</span><button data-atmosphere-toggle aria-pressed="false">Wstrzymaj animację radaru</button><a href="https://www.instagram.com/35bartolini/" target="_blank" rel="noopener noreferrer" aria-label="Kontakt na Instagramie: 35Bartolini (otwiera nową kartę)">Kontakt / @35Bartolini</a></footer>
     </div>
   </main>
-
   <!-- SETUP (KREATOR FLOTY) -->
   <div id="screen-setup" class="screen">
 
