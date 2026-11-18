@@ -4,6 +4,7 @@ import { BoardRenderer, TILE_SIZE, BOARD_MARGIN } from './render/boardRenderer';
 import { UnitRenderer } from './render/unitRenderer';
 import { InputHandler } from './render/inputHandler';
 import { pointerTile } from './render/coordinates';
+import { installUnitLabels } from './render/unitLabels';
 import { NetworkClient } from './network';
 import type { Unit, GameView, PlayerId } from './engine/types';
 import { getLegalMoves } from './engine/movement';
@@ -67,6 +68,7 @@ const gameUnits = new UnitRenderer(gameCanvas, role);
 const setupRenderer = new UnitRenderer(setupCanvas, role);
 installBoardViewport(gameCanvas, element('crt-container'), element('world-layer'));
 const input = new InputHandler(gameCanvas, () => network.session?.playerId ?? null, () => network.canAct, action => network.action(action));
+const resetUnitLabels = installUnitLabels(gameCanvas, element('unit-inspection'), () => store.getState(), role);
 
 function showScreen(id: 'screen-menu' | 'screen-setup' | 'screen-game') {
   const changed = !document.getElementById(id)!.classList.contains('active');
@@ -99,6 +101,11 @@ function setupLocked() {
   return !localEditor && (!network.connected || !network.synced || network.busy || !!network.state?.ready[role()]);
 }
 function renderControls() {
+  const player = network.session?.playerId;
+  for (const label of document.querySelectorAll<HTMLElement>('[data-player-identity]')) {
+    label.hidden = !player || localEditor;
+    label.textContent = player ? `Jesteś graczem ${player.toUpperCase()} · Twój port: ${player === 'a' ? 'lewa' : 'prawa'} strona` : '';
+  }
   element('connection-status').textContent = !network.connected
     ? 'Łączenie z serwerem… Pierwsze uruchomienie może potrwać około minuty.'
     : network.busy ? 'Czekamy na odpowiedź serwera…'
@@ -316,6 +323,7 @@ fileInput.addEventListener('change', () => task(async () => {
 }));
 
 store.subscribe(state => {
+  resetUnitLabels();
   if (state.phase !== 'playing' && state.phase !== 'finished') return;
   element<HTMLSpanElement>('round-number').textContent = String(Math.ceil(state.turn / 2));
   element<HTMLSpanElement>('mine-count').textContent = `Miny: ${6 - state.units.filter(u => u.alive && u.ownerId === role() && u.type === 'mina').length}/6`;

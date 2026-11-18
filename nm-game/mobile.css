@@ -1,4 +1,9 @@
 /* Touch targets and responsive layouts; no document-wide gesture suppression. */
+.player-identity {margin:8px 0 0;font-size:.85rem;line-height:1.5;color:var(--text-active);font-weight:700;letter-spacing:.02em;}
+.unit-inspection {min-height:3em;margin:4px 0 0;font-size:.8rem;line-height:1.5;color:var(--text-normal);max-width:65ch;}
+.unit-tooltip {position:fixed;z-index:1000;pointer-events:none;max-width:calc(100vw - 16px);padding:10px 12px;border:1px solid var(--text-active);border-radius:3px;background:var(--hw-bg,#101912);color:var(--text-active);font:14px/1.5 Consolas,monospace;box-shadow:0 4px 18px #0009;}
+.unit-tooltip[hidden],.player-identity[hidden] {display:none;}
+#screen-game.active,#screen-setup.active {grid-template-rows:auto minmax(0,1fr) 45px;}
 #crt-container {touch-action:none;}
 #world-layer {flex-shrink:0;}
 #game-canvas {max-width:none;max-height:none;transition:none;}
